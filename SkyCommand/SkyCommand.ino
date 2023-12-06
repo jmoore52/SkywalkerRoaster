@@ -1,7 +1,7 @@
 //#define __DEBUG__
 //#define __WARN__
 
-#define USE_TIMER_1 true
+//#define USE_TIMER_1 true
 #include "TimerInterrupt.h"
 #include <limits.h>
 
@@ -215,7 +215,7 @@ void handleDRUM(uint8_t value) {
 void handleREAD() {
   Serial.print(0.0);
   Serial.print(',');
-  Serial.print(0.0);
+  Serial.print(temp);
   Serial.print(',');
   Serial.print(temp);
   Serial.print(',');
@@ -252,8 +252,8 @@ void setup() {
   pinMode(txPin, OUTPUT);
   shutdown();
 
-  ITimer1.init();
-  ITimer1.attachInterruptInterval(750, sendMessage);
+  //ITimer1.init();
+  //ITimer1.attachInterruptInterval(750, sendMessage);
 }
 
 void loop() {
@@ -263,7 +263,6 @@ void loop() {
   //If Artisan is on, it should be polling for temps every few seconds. This requires we get a VALID control command.
   //I also want to add some sort of over temp protection. Butthis is the wild west. Don't burn your roaster and/or house down.
 
-  //sendMessage();
   if (itsbeentoolong()) {
     //TODO: Maybe consider moving this logic to the interrupt handler
     //That way if the arduino is having issues, the interrupt handler
@@ -271,6 +270,8 @@ void loop() {
 
     shutdown();
   }
+
+  sendMessage();
 
   getRoasterMessage();
 
