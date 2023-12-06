@@ -23,11 +23,15 @@ TODO
 This has been super fun to study. Here's what I've learned so far. 
 
 The controller has a [js32t031f5s7 microcontoller](http://www.honor-ic.com/Product/ProScreenDetail?pid=118). 
+
 I am unsure what kind of microcontroller is inside the roaster. It is marked FMD N3hWIKH and I was unable to locate any datasheets for it. 
+
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/9667b4ed-4d56-44d6-9c13-1d5d7ac2737e)
 
 The roaster uses a thermistor as a temperature probe which is connected to the microcontroller as shown here. 
+
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/b5e678ef-a7f5-44a4-83ef-9cf92c3277f3)
+
 It appears to use a voltage divider with two taps, one passing through a 1k resistor and the other through a 2k resistor. I'm not the strongest hardware guy by any means, but I don't understand why. If this look familiar to you, please let me know what we're looking at here. 
 
 
