@@ -11,6 +11,8 @@ This is full control of the skywalker roaster via Artisan. The sketch does the b
 I use an arduino leonardo with a USB cable soldered to the Vin, GND, and Digital Pins 2 and 3. That's it. 
 ![PXL_20231206_190446798 MP](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/d03d5bd3-de08-4ee2-986c-d3fef3e07c47)
 
+The black cable goes to the USB port on the back of the roaster (that's only USB in form.. it's not actually using USB communications), the white one to my computer running Artisan. 
+
 
 #### Artisan Config
 Here's how I have Artisan configured. 
