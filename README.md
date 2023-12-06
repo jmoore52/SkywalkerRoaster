@@ -9,9 +9,23 @@ This is full control of the skywalker roaster via Artisan. The sketch does the b
 
 #### Hardware
 I use an arduino leonardo with a USB cable soldered to the Vin, GND, and Digital Pins 2 and 3. That's it. 
+![PXL_20231206_190446798 MP](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/d03d5bd3-de08-4ee2-986c-d3fef3e07c47)
+
 
 #### Artisan Config
-TODO
+Here's how I have Artisan configured. 
+Config -> Device
+![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/d4a61e74-070b-4bd8-a6c0-63acc1e8f28d)
+
+Config -> Events -> Config
+![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/10172b83-d5c5-4bc0-9dba-fe810b0541ef)
+
+Config -> Events -> Buttons
+![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/b899f2df-6f41-4187-93f3-4e7eb4a2fc4c)
+
+Config -> Events -> Sliders
+![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/5ddbc13f-aeee-4911-96f2-38bab24269b6)
+
 
 ### SkywalkerSpy
 This provides logging only for Artisan. It uses two pins to monitor the Tx lines from both the roaster and the controller. It alternates between reading the values as quickly as possible. When any input comes in on the serial line the sketch will respond with the status of the roaster in the format TEMP,HEAT DUTY,VENT DUTY 
