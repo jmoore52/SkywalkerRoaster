@@ -57,7 +57,7 @@ The messages sent by each device are rather simple in structure. I've determined
 
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/ba62c969-7bf0-4eb5-afd7-8f788b759ce2) 
 
-Interpreting the messages can be done by simply measuring the logic LOW pulses. The beginning preamble is roughly 7.5ms, a binary 1 is represented by a ~1.5ms pulse, a binary 6 is ~600 microseconds, and the logic HIGH between bits is roughly 750 microseconds. 
+Interpreting the messages can be done by simply measuring the logic LOW pulses. The beginning preamble is roughly 7.5ms, a binary 1 is represented by a ~1.5ms pulse, a binary 0 is ~600 microseconds, and the logic HIGH between bits is roughly 750 microseconds.
 
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/82005860-83ae-40a5-8574-5bc535f85420)
 
