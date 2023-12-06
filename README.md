@@ -46,23 +46,26 @@ Interpreting the messages can be done by simply measuring the logic LOW pulses. 
 ### Controller
 The controller transmits a 6 byte message in LSB order. Both messages contain a checksum and will be ignored if the checksum is not correct.
 
-Byte 0 - Fan Duty Cycle - 0 to 100
-Byte 1 - Filter - Appears to only be values 0,1,2,3,4. 
-Byte 2 - Bean Cooling Fan - 0 or 100 
-Byte 3 - Drum - 0 or 100
-Byte 4 - Heater Duty Cylce - 0 to 100
-Byte 5 - Checksum
+| Position | Purpose | Value |
+|----------|---------|-------|
+| 0 | Fan Duty Cycle | 0 to 100
+| 1 | Filter | Appears to only be values 0,1,2,3,4 |
+| 2 | Bean Cooling Fan | 0 or 100 |
+| 3 | Drum | 0 or 100 |
+| 4 | Heater Duty Cylce | 0 to 100 |
+| 5 | Checksum | |
 
 For the Fan and Heater, duty cycles increment by 5. Sending other values will be ignored. 
 
 ### Roaster
 The roaster transmits a 7 byte message in LSB Order. 
-
-Bytes 0,1 - Value A - I'm not _really_ sure what this value is. I suspect it is perhaps a voltage as read by an ADC on the microcontroller.
-Bytes 2,3 - Value B - Again, not _really_ sure what the value really represents. I think it is another ADC value.  
-Byte 4 - Mystery byte - Always a 0. 
-Byte 5 - Mystery byte - Pretty much always a 1. I've not seen much of a correlation to hardware that seems to indicate what this may represent. 
-Byte 6 - Checksum
+|Position| Name| Value|
+|--------|-----|------|
+|0,1| Value A | I'm not _really_ sure what this value is. I suspect it is perhaps a voltage as read by an ADC on the microcontroller|
+|2,3|Value B|Again, not _really_ sure what the value really represents. I think it is another ADC value.|  
+| 4 | Mystery byte | Always a 0.|
+| 5 | Mystery byte | Pretty much always a 1. I've not seen much of a correlation to hardware that seems to indicate what this may represent.|
+|6 | Checksum||
 
 Value A and Value B are my biggest open question about this roaster. What is it doing?! There is a very strong linear correlation between the two values and the temperature displayed on the controller screen. However I could not determine what I would consider to be an "elegant" solution for converting these values to the temperature. Rather, I fit a 4th degree polynomial to the data (see `data/model3.py` but please keep in mind it's been a long minute since I've run a regression. ChatGPT wrote a lot of that with some guidance.) 
 
