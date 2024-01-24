@@ -27,6 +27,7 @@ double temp = 0.0;
 
 unsigned long time = 0;
 unsigned long timeout = 10000000;
+char CorF = 'F';
 
 void setControlChecksum() {
   uint8_t sum = 0;
@@ -96,6 +97,8 @@ double calculateTemp() {
              + 247.6124684730026 * y * y * y + -555.8643213534281 * x * x * x * x
              + 3879.431274654493 * x * x * x * y + -6885.682277959339 * x * x * y * y
              + 2868.4191998911865 * x * y * y * y + -1349.1588373011923 * y * y * y * y;
+
+  if ( CorF == 'C' ) v = (v - 32) * 5 / 9;
 
   return v;
 }
@@ -306,6 +309,8 @@ void loop() {
       handleCOOL(value);
     } else if (command == "CHAN") { //Hanlde the TC4 init message
       handleCHAN();
+    } else if (command == "UNITS") {
+      if (split >= 0) CorF = input.charAt(split + 1);
     }
   }
 }
