@@ -37,7 +37,11 @@ The black cable goes to the USB port on the back of the roaster (that's only USB
     <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/9b231e14-a04a-4ed5-8e4a-6b9e65c11487" width=25% height=25%>
     <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/c7235c87-918b-47ea-be88-b844c39c72b2" width=25% height=25%>
 4. Download repository and extract.
-5. Connect your Arduino into your computer.
+   
+   <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/f4873816-a929-4e83-a2e1-6f856e2a310b" width=25% height=25%>
+
+
+6. Connect your Arduino into your computer.
     
     <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/706ed2f0-08be-4660-a2da-edd83a547d8f" width=25% height=25%>
 
