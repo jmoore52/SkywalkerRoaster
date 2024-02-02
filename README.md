@@ -13,26 +13,48 @@ I use an arduino leonardo with a USB cable soldered to the Vin, GND, and Digital
 
 The black cable goes to the USB port on the back of the roaster (that's only USB in form.. it's not actually using USB communications), the white one to my computer running Artisan. 
 
-#### Instructions
+## Arduino Instructions
 
 1. Install ArduinoIDE
 
 2. Find any old USB cable. Cut it up in half, and prune a bit off the plastic sleeving. You should find four smaller wires. Connect these wires to your Arduino as such either through soldering or just inserting it into the slots:
 
-Blue -> Digital 2
-White -> Digital 3
-Red -> VIN
-Black -> GND
+      Green -> Digital 2
 
-3. Download repository and extract.
+      White -> Digital 3
 
-Then, for TimerInterrupt.h either comment it out like so:
-![image](https://github.com/paoyong/SkywalkerRoaster/assets/6934989/2ec65309-278c-4a41-8d1a-4df7fc7123c7)
+      Red -> VIN
+   
+     Black -> GND
 
-or download TimerInterrupt library [here](https://www.arduino.cc/reference/en/libraries/timerinterrupt/) and copy paste it into the SkyCommand folder like so:
-![image](https://github.com/paoyong/SkywalkerRoaster/assets/6934989/6d74cc86-e3f8-47c0-bc41-1c0bfb45a20b)
+    Breadboard example:
+   
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/5fe7940b-152d-4d47-bfcc-7e6246f82b3e" width=25% height=25%>
 
-#### Artisan Config
+    Soldering example (more secure):
+   
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/145cbf62-6af3-4d41-9fd1-579d95e46408" width=25% height=25%>
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/9b231e14-a04a-4ed5-8e4a-6b9e65c11487" width=25% height=25%>
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/c7235c87-918b-47ea-be88-b844c39c72b2" width=25% height=25%>
+4. Download repository and extract.
+5. Connect your Arduino into your computer.
+    
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/706ed2f0-08be-4660-a2da-edd83a547d8f" width=25% height=25%>
+
+7. Go to your SkywalkerRoaster-main folder that you extracted. Click on the SkyCommand folder then double click on `SkyCommand.ino` (should open automatically in ArduinoIDE)
+8. Go to Tools -> Manage Libraries, then search for TimerInterrupt and click install
+
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/46e73338-e910-4dc0-a949-cb87eac8e99f" width=25% height=25%>
+
+
+9. Click on your Arduino device and press Upload
+
+
+    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/5872e057-57ce-48c9-b756-ae8471c9da6c" width=50% height=50%>
+
+
+
+## Artisan Config
 Here's how I have Artisan configured. 
 Config -> Device
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/d4a61e74-070b-4bd8-a6c0-63acc1e8f28d)
