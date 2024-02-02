@@ -63,6 +63,11 @@ Here's how I have Artisan configured.
 Config -> Device
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/d4a61e74-070b-4bd8-a6c0-63acc1e8f28d)
 
+After pressing OK, an additional dialogue box will appear, select your Arduino. If you're not sure which is your Arduino, disconnect and reconnect it and the dialogue box should change.
+
+![image](https://github.com/paoyong/SkywalkerRoaster/assets/6934989/4948316b-9158-431d-a3e9-17cb2db880b5")
+
+
 Config -> Events -> Config
 ![image](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/10172b83-d5c5-4bc0-9dba-fe810b0541ef)
 
