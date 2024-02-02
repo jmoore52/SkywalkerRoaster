@@ -13,6 +13,24 @@ I use an arduino leonardo with a USB cable soldered to the Vin, GND, and Digital
 
 The black cable goes to the USB port on the back of the roaster (that's only USB in form.. it's not actually using USB communications), the white one to my computer running Artisan. 
 
+#### Instructions
+
+1. Install ArduinoIDE
+
+2. Find any old USB cable. Cut it up in half, and prune a bit off the plastic sleeving. You should find four smaller wires. Connect these wires to your Arduino as such either through soldering or just inserting it into the slots:
+
+Blue -> Digital 2
+White -> Digital 3
+Red -> VIN
+Black -> GND
+
+3. Download repository and extract.
+
+Then, for TimerInterrupt.h either comment it out like so:
+![image](https://github.com/paoyong/SkywalkerRoaster/assets/6934989/2ec65309-278c-4a41-8d1a-4df7fc7123c7)
+
+or download TimerInterrupt library [here](https://www.arduino.cc/reference/en/libraries/timerinterrupt/) and copy paste it into the SkyCommand folder like so:
+![image](https://github.com/paoyong/SkywalkerRoaster/assets/6934989/6d74cc86-e3f8-47c0-bc41-1c0bfb45a20b)
 
 #### Artisan Config
 Here's how I have Artisan configured. 
