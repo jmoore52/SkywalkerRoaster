@@ -140,6 +140,10 @@ Value A and Value B are my biggest open question about this roaster. What is it 
 
 To collect the data I attached a logic probe to the controller and captured a preheat cycle. I extracted all the messages from the capture, wrote an arduino sketch to replay the bytes in the messages back to the controller, and coded up a quick and dirty python script to push each message to the arduino and allow me to enter the value shown on the screen. The results of this process are in `Data/RealLabeledTemperatures.txt` 
 
+# Discord
+
+There's a skywalker specific discord (not mine) that seems to have a small but growing and enthusiastic group. I'm on there. Come share your experiences with this roaster. [Skywalker Roaster Community](https://discord.com/invite/DtcfzX2Q)
+
 # Bug Fixes and Improvements
 
 I'll spend some more time on things when I can, but pull requests are always welcome and appreciated.  
