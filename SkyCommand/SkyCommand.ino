@@ -1,8 +1,7 @@
 //#define __DEBUG__
 //#define __WARN__
-
 //#define USE_TIMER_1 true
-#include "TimerInterrupt.h"
+
 #include <limits.h>
 
 const int txPin = 3;
@@ -98,7 +97,7 @@ double calculateTemp() {
              + 3879.431274654493 * x * x * x * y + -6885.682277959339 * x * x * y * y
              + 2868.4191998911865 * x * y * y * y + -1349.1588373011923 * y * y * y * y;
 
-  if ( CorF == 'C' ) v = (v - 32) * 5 / 9;
+  if (CorF == 'C') v = (v - 32) * 5 / 9;
 
   return v;
 }
@@ -295,19 +294,19 @@ void loop() {
 
     if (command == "READ") {
       handleREAD();
-    } else if (command == "OT1") { //Set Heater Duty
+    } else if (command == "OT1") {  //Set Heater Duty
       handleHEAT(value);
-    } else if (command == "OT2") { //Set Fan Duty
+    } else if (command == "OT2") {  //Set Fan Duty
       handleVENT(value);
-    } else if (command == "OFF") { //Shut it down
+    } else if (command == "OFF") {  //Shut it down
       shutdown();
-    } else if (command == "DRUM") {//Start the drum
+    } else if (command == "DRUM") {  //Start the drum
       handleDRUM(value);
-    } else if (command == "FILTER") { //Turn on the filter fan
+    } else if (command == "FILTER") {  //Turn on the filter fan
       handleFILTER(value);
-    } else if (command == "COOL") { //Cool the beans
+    } else if (command == "COOL") {  //Cool the beans
       handleCOOL(value);
-    } else if (command == "CHAN") { //Hanlde the TC4 init message
+    } else if (command == "CHAN") {  //Hanlde the TC4 init message
       handleCHAN();
     } else if (command == "UNITS") {
       if (split >= 0) CorF = input.charAt(split + 1);
