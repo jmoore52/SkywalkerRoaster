@@ -14,10 +14,10 @@ This is full control of the skywalker roaster via Artisan. The sketch does the b
 The sketch requires that it see a command from Artisan at least every 10 seconds or it will shut down. The READ commands from artisan will keep it going. I think it's ok to run, but what do I know? I'm just a nerd on the internet. Use this at your own risk.
 
 #### Hardware
-I use an arduino leonardo with a USB cable soldered to the Vin, GND, and Digital Pins 2 and 3. That's it. 
+I use an arduino leonardo with a USB cable soldered to the Vin, GND, and Digital Pins 2 and 3. That's it.
 ![PXL_20231206_190446798 MP](https://github.com/jmoore52/SkywalkerRoaster/assets/25308608/d03d5bd3-de08-4ee2-986c-d3fef3e07c47)
 
-The black cable goes to the USB port on the back of the roaster (that's only USB in form.. it's not actually using USB communications), the white one to my computer running Artisan. 
+The black cable goes to the USB port on the back of the roaster (that's only USB in form.. it's not actually using USB communications), the white one to my computer running Artisan.
 
 ## Arduino Instructions
 
@@ -108,12 +108,29 @@ OT2;{}
 ```
 OT1;{}
 ```
+### Troubleshooting
+- check all connections, unplug and re-plug in the USB cables, also check pins and solder points
+- swap out USB cables, the arduino to computer cable is important also
+- you will need to have drivers for your arduino unit on some machines so if you're running on a different machine where you set up the arduino, just install arduino IDE and install the drivers with the IDE to ensure you can connect
+- make sure you are on the tested or later version of artisan
+
+### Testing/Compatibility
+#### Artisan Version
+- 2.10.2
+#### Working Hardware Combos
+- Leonardo
+  - Windows ?
+- Micro
+  - Windows 11
+  - MacOS
+- Nano ATMEGA
+  - Linux Mint
+
+- Uno Wifi R4
+  - not yet
 
 ### SkywalkerSpy
 This provides logging only for Artisan. It uses two pins to monitor the Tx lines from both the roaster and the controller. It alternates between reading the values as quickly as possible. When any input comes in on the serial line the sketch will respond with the status of the roaster in the format TEMP,HEAT DUTY,VENT DUTY
-
-#### Artisan Config
-TODO
 
 ## Roaster Hardware
 This has been super fun to study. Here's what I've learned so far.
@@ -170,6 +187,10 @@ The roaster transmits a 7 byte message in LSB Order.
 Value A and Value B are my biggest open question about this roaster. What is it doing?! There is a very strong linear correlation between the two values and the temperature displayed on the controller screen. However I could not determine what I would consider to be an "elegant" solution for converting these values to the temperature. Rather, I fit a 4th degree polynomial to the data (see `data/model3.py` but please keep in mind it's been a long minute since I've run a regression. ChatGPT wrote a lot of that with some guidance.)
 
 To collect the data I attached a logic probe to the controller and captured a preheat cycle. I extracted all the messages from the capture, wrote an arduino sketch to replay the bytes in the messages back to the controller, and coded up a quick and dirty python script to push each message to the arduino and allow me to enter the value shown on the screen. The results of this process are in `Data/RealLabeledTemperatures.txt`
+
+### Other Observations
+- The roaster is looking for a device to draw USB power, if nothing is there it will not run, if you unplug the controller or arduino during a roast, everything shuts down, this is actually kind of dangerous as the beans inside could ignite without movement or fan.
+- Some testing unplugging the signal pins in the arduino yielded that the roaster will not run without constant signals from these pins either, but the user can plug back in and start controlling the roaster again. (granted you don't hit the 10sec limit from the sketch)
 
 # Discord
 
