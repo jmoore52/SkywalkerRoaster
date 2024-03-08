@@ -73,23 +73,23 @@ look in [ArtisanConfigs](ArtisanConfigs/) for other configs users have created.
 ## Artisan Manually Setting Config
 Here's how I have Artisan configured.
 Config -> Device
-![image](images/artisan_config_tc4.png)
+![image](Images/artisan_config_tc4.png)
 
 After pressing OK, an additional dialogue box will appear, select your Arduino. If you're not sure which is your Arduino, disconnect and reconnect it and the dialogue box should change.
 You can also navigate here by going to Config -> Port...
 Comm Port will be different depending on OS you are running and which USB port you are plugged into.
 
-![image](images/artisan_config_ports.png)
-![My Image](images/my-image.jpg)
+![image](Images/artisan_config_ports.png)
+![My Image](Images/my-image.jpg)
 
 Config -> Events -> Config
-![image](images/artisan_config_events_config.png)
+![image](Images/artisan_config_events_config.png)
 ```
 DRUM;100
 ```
 
 Config -> Events -> Buttons
-![image](images/artisan_config_events_buttons.png)
+![image](Images/artisan_config_events_buttons.png)
 ```
 DRUM;100
 ```
@@ -102,7 +102,7 @@ FILTER;1
 etc..
 
 Config -> Events -> Sliders
-![image](images/artisan_config_events_sliders.png)
+![image](Images/artisan_config_events_sliders.png)
 ```
 OT2;{}
 ```
