@@ -57,7 +57,7 @@ The black cable goes to the USB port on the back of the roaster (that's only USB
 ## Hardware Pinout Examples
 Arduino Micro
 <!-- <img src="images/ardunio_micro_pinout.jpg" alt="micro pinout" width="400"/> -->
-![image](images/ardunio_micro_pinout.jpg)
+![image](Images/ardunio_micro_pinout.jpg)
 
 ## Artisan Upload Config
 We can upload a preset config in Artisan Scope
