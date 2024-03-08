@@ -80,7 +80,6 @@ You can also navigate here by going to Config -> Port...
 Comm Port will be different depending on OS you are running and which USB port you are plugged into.
 
 ![image](Images/artisan_config_ports.png)
-![My Image](Images/my-image.jpg)
 
 Config -> Events -> Config
 ![image](Images/artisan_config_events_config.png)
