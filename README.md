@@ -2,14 +2,14 @@
 
 This is a guide to for connecting the Skywalker/ITOP MTCR(SkItop) Roaster connected to Artisan. In addition to the arduino sketches the data I've collected about the roaster is available here.
 
-⚠️==WARNING 👉 DO NOT LEAVE ROASTER UNATTENDED==⚠️
+⚠️WARNING 👉 DO NOT LEAVE ROASTER UNATTENDED⚠️
 
 ## Arduino Sketches
 
 ### SkyCommand
 This is full control of the skywalker roaster via Artisan. The sketch does the bare minimum to emulate TC4. Exercise caution, there are minimal safety features built in. As with every other coffee roaster..
 
-⚠️==WARNING 👉 DO NOT LEAVE ROASTER UNATTENDED==⚠️
+⚠️WARNING 👉 DO NOT LEAVE ROASTER UNATTENDED⚠️
 
 The sketch requires that it see a command from Artisan at least every 10 seconds or it will shut down. The READ commands from artisan will keep it going. I think it's ok to run, but what do I know? I'm just a nerd on the internet. Use this at your own risk.
 
