@@ -1,6 +1,5 @@
 //#define __DEBUG__
 //#define __WARN__
-//#define USE_TIMER_1 true
 #include <limits.h>
 
 const int txPin = 3;
