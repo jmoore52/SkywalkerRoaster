@@ -41,6 +41,12 @@ void shutdown() {
   }
 }
 
+//Emergency stop heat to 0 and vent to 100
+void eStop() {
+  setValue(&sendBuffer[heatByte], 0);
+  setValue(&sendBuffer[ventByte], 100);
+}
+
 void pulsePin(int pin, int duration) {
   //Assuming pin is HIGH when we get it
   digitalWrite(pin, LOW);
@@ -279,9 +285,10 @@ void processCommand() {
   }
 
   if (command == "READ") handleREAD();
+  else if (command == "OFF") shutdown();
+  else if (command == "ESTOP") eStop();
   else if (command == "OT1") handleHEAT(value);
   else if (command == "OT2") handleVENT(value);
-  else if (command == "OFF") shutdown();
   else if (command == "DRUM") handleDRUM(value);
   else if (command == "FILTER") handleFILTER(value);
   else if (command == "COOL") handleCOOL(value);
