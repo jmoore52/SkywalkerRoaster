@@ -1,0 +1,33 @@
+name: Compile Sketch
+
+# The workflow will run on every push and pull request to the repository
+on:
+  - push
+  - pull_request
+
+jobs:
+  compile-sketch:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arduino_board: [micro, nano, uno]
+    fqbn:
+     - arduino:avr:micro
+
+    steps:
+      # This step makes the contents of the repository available to the workflow
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # For more information: https://github.com/arduino/compile-sketches#readme
+      - name: Compile sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          arduino-cli-version: ubuntu-latest
+      
+      - name: Compile for Arduino
+        run: |
+          for board in "${{ matrix.arduino_board }}"; do
+            arduino-cli compile --fqbn arduino:avr:${board} ${{ github.workspace }}
+          done
