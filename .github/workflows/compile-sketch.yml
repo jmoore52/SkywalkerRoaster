@@ -12,11 +12,12 @@ jobs:
     strategy:
       matrix:
         fqbn:
-          - arduino:avr:"Arduino Nano"
-          - arduino:avr:"Arduino Micro"
+          - arduino:avr:nano
+          - arduino:avr:micro
+          - arduino:avr:leonardo
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
       # For more information: https://github.com/arduino/compile-sketches#readme
       - name: Compile sketch
         uses: arduino/compile-sketches@v1
