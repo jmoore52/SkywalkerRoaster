@@ -1,0 +1,28 @@
+name: Compile Sketch
+
+# The workflow will run on every push and pull request to the repository
+on:
+  - push
+  - pull_request
+
+jobs:
+  compile-sketch:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        fqbn:
+          - arduino:avr:nano
+          - arduino:avr:micro
+          - arduino:avr:leonardo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@master
+      # For more information: https://github.com/arduino/compile-sketches#readme
+      - name: Compile sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: ${{ matrix.fqbn }}
+          sketch-paths: |
+            - SkyCommand
+            - SkywalkerSpy
