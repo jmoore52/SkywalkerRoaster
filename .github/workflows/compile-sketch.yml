@@ -11,21 +11,14 @@ jobs:
 
     strategy:
       matrix:
-        arduino_board: [micro, nano, uno]
-
+        fqbn:
+          - arduino:avr:"Arduino Nano"
+          - arduino:avr:"Arduino Micro"
     steps:
-      # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
         uses: actions/checkout@v4
-
       # For more information: https://github.com/arduino/compile-sketches#readme
       - name: Compile sketch
         uses: arduino/compile-sketches@v1
         with:
-          arduino-cli-version: ubuntu-latest
-      
-      - name: Compile for Arduino
-        run: |
-          for board in "${{ matrix.arduino_board }}"; do
-            arduino-cli compile --fqbn arduino:avr:${board} ${{ github.workspace }}
-          done
+          fqbn: ${{ matrix.fqbn }}
