@@ -12,8 +12,6 @@ jobs:
     strategy:
       matrix:
         arduino_board: [micro, nano, uno]
-    fqbn:
-     - arduino:avr:micro
 
     steps:
       # This step makes the contents of the repository available to the workflow
@@ -29,5 +27,5 @@ jobs:
       - name: Compile for Arduino
         run: |
           for board in "${{ matrix.arduino_board }}"; do
-            arduino-cli compile --board arduino:avr:${board} ${{ github.workspace }}
+            arduino-cli compile --fqbn arduino:avr:${board} ${{ github.workspace }}
           done
