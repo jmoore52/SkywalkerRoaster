@@ -4,6 +4,15 @@ This is a guide to for connecting the Skywalker/ITOP MTCR(SkItop) Roaster connec
 
 ⚠️WARNING 👉 DO NOT LEAVE ROASTER UNATTENDED⚠️
 
+The easiest way to get this working is to
+1. Connect USB cable to [Arduino](#arduino-instructions) with correct jumpers
+2. Load [Sketch](#arduino-instructions) onto arduino
+3. Load [config[](#artisan-upload-config) into artisan-scope
+4. Plug in arduino to computer through arduino USB cable(NOT the one we jumpered)
+5. Plug in arduino to roaster where the controller was connected with the USB cable we jumpered
+6. In artisan [config](#artisan-manually-setting-config) set the correct device
+7. click/tap the on button in artisan-scope and temps should be available and roaster is controllable
+   
 ## Arduino Sketches
 
 ### SkyCommand
@@ -40,19 +49,17 @@ The black cable goes to the USB port on the back of the roaster (that's only USB
     <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/9b231e14-a04a-4ed5-8e4a-6b9e65c11487" width=25% height=25%>
     <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/c7235c87-918b-47ea-be88-b844c39c72b2" width=25% height=25%>
 3. Download repository and extract.
-   
-    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/f4873816-a929-4e83-a2e1-6f856e2a310b" width=25% height=25%>
+![image](Images/download-repo-extract.png)
 
-4. Connect your Arduino into your computer.
+1. Connect your Arduino into your computer.
 
     <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/706ed2f0-08be-4660-a2da-edd83a547d8f" width=25% height=25%>
 
-5. Go to your SkywalkerRoaster-main folder that you extracted. Click on the SkyCommand folder then double click on `SkyCommand.ino` (should open automatically in ArduinoIDE)
+2. Go to your SkywalkerRoaster-main folder that you extracted. Click on the SkyCommand folder then double click on `SkyCommand.ino` (should open automatically in ArduinoIDE)
 
-6. Click on the check mark to do a precompile, this lets you know if the code will work on your board.
-7.  Click on your Arduino device and press Upload, the console on the bottomr should give you a success message. Some boards output debug, but if there is no error it probably succeeded.
-
-    <img src="https://github.com/paoyong/SkywalkerRoaster/assets/6934989/5872e057-57ce-48c9-b756-ae8471c9da6c" width=50% height=50%>
+3. Click on the check mark to do a precompile, this lets you know if the code will work on your board.
+4.  Click on your Arduino device and press Upload, the console on the bottomr should give you a success message. Some boards output debug, but if there is no error it probably succeeded.
+![image](Images/click-arduino-device-upload.png)
 
 ## Hardware Pinout Examples
 Arduino Micro
@@ -62,7 +69,7 @@ Arduino Micro
 ## Artisan Upload Config
 We can upload a preset config in Artisan Scope
 Help -> Load Settings...
-![image](images/load_aset_file_menu.png)
+![image](Images/load_aset_file_menu.png)
 
 This is a default file with the most basic settings.
 [basic-skitop-artisan-settings.aset](ArtisanConfigs/basic-skitop-artisan-settings.aset)
@@ -189,7 +196,7 @@ Value A and Value B are my biggest open question about this roaster. What is it 
 To collect the data I attached a logic probe to the controller and captured a preheat cycle. I extracted all the messages from the capture, wrote an arduino sketch to replay the bytes in the messages back to the controller, and coded up a quick and dirty python script to push each message to the arduino and allow me to enter the value shown on the screen. The results of this process are in `Data/RealLabeledTemperatures.txt`
 
 ### Other Observations
-- The roaster is looking for a device to draw USB power, if nothing is there it will not run, if you unplug the controller or arduino during a roast, everything shuts down, this is actually kind of dangerous as the beans inside could ignite without movement or fan.
+- The roaster is looking for a USB ground, if nothing is there it will not run, if you unplug the controller or arduino during a roast, everything shuts down, this is actually kind of dangerous as the beans inside could ignite without movement or fan.
 - Some testing unplugging the signal pins in the arduino yielded that the roaster will not run without constant signals from these pins either, but the user can plug back in and start controlling the roaster again. (granted you don't hit the 10sec limit from the sketch)
 
 # Discord
