@@ -29,5 +29,5 @@ jobs:
       - name: Compile for Arduino
         run: |
           for board in "${{ matrix.arduino_board }}"; do
-            arduino-cli compile --fqbn arduino:avr:${board} ${{ github.workspace }}
+            arduino-cli compile --board arduino:avr:${board} ${{ github.workspace }}
           done
