@@ -24,8 +24,8 @@ int checkByte = 5;
 
 double temp = 0.0;
 
-unsigned long time = 0;
-unsigned long timeout = 10000000;
+unsigned long lastEventTime = 0;
+unsigned long lastEventTimeout = 10000000;
 char CorF = 'F';
 
 void setControlChecksum() {
@@ -36,7 +36,7 @@ void setControlChecksum() {
   sendBuffer[controllerLength - 1] = sum;
 }
 
-bool setValue(uint8_t* bytePtr, uint8_t v) {
+void setValue(uint8_t* bytePtr, uint8_t v) {
   *bytePtr = v;
   setControlChecksum();  // Always keep the checksum updated.
 }
@@ -178,31 +178,31 @@ void getRoasterMessage() {
   temp = calculateTemp();
 }
 void handleHEAT(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[heatByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleVENT(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[ventByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleCOOL(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[coolByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleFILTER(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[filterByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleDRUM(uint8_t value) {
@@ -211,7 +211,7 @@ void handleDRUM(uint8_t value) {
   } else {
     setValue(&sendBuffer[drumByte], 0);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleREAD() {
@@ -227,18 +227,19 @@ void handleREAD() {
   Serial.print(',');
   Serial.println('0');
 
-  time = micros();
+  lastEventTime = micros();
 }
 
 bool itsbeentoolong() {
   unsigned long now = micros();
-  unsigned long duration = now - time;
-  if (duration < 0) {
-    duration = (ULONG_MAX - time) + now;  //I think this is right.. right?
+  unsigned long duration = now - lastEventTime;
+  //if (duration < 0) {       // Commented out because compiler states comparison of unsigned expression < 0 is always false
+  //  duration = (ULONG_MAX - lastEventTime) + now;  //I think this is right.. right?
+  //}
+  if (duration > lastEventTimeout) {
+    return true;
   }
-  if (duration > timeout) {
-    shutdown();  //We turn everything off
-  }
+  return false;
 }
 
 void handleCHAN() {
@@ -270,7 +271,7 @@ void loop() {
     //That way if the arduino is having issues, the interrupt handler
     //Will stop sending messages to the roaster and it'll shut down.
 
-    shutdown();
+    shutdown(); //We turn everything off
   }
 
   sendMessage();
