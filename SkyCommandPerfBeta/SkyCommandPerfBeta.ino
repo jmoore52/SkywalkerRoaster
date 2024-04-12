@@ -16,8 +16,8 @@ uint8_t sendBuffer[controllerLength];
 int ventByte = 0, drumByte = 3, coolByte = 2, filterByte = 1, heatByte = 4;
 
 double temp = 0.0;
-unsigned long time = 0;
-unsigned long timeout = 10000000;
+unsigned long lastEventTime = 0;  // Stores the timestamp of the last system activity to manage timeouts
+unsigned long lastEventTimeout = 10000000;
 char CorF = 'F';
 
 void setControlChecksum() {
@@ -29,7 +29,7 @@ void setControlChecksum() {
 }
 
 // Always keep the checksum updated
-bool setValue(uint8_t* bytePtr, uint8_t v) {
+void setValue(uint8_t* bytePtr, uint8_t v) {
   *bytePtr = v;
   setControlChecksum();
 }
@@ -184,36 +184,36 @@ void getRoasterMessage() {
 }
 
 void handleHEAT(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[heatByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleVENT(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[ventByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleCOOL(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if (value <= 100) {
     setValue(&sendBuffer[coolByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleFILTER(uint8_t value) {
-  if (value >= 0 && value <= 100) {
+  if ( value <= 100) {
     setValue(&sendBuffer[filterByte], value);
   }
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleDRUM(uint8_t value) {
   setValue(&sendBuffer[drumByte], (value != 0) ? 100 : 0);
-  time = micros();
+  lastEventTime = micros();
 }
 
 void handleREAD() {
@@ -228,15 +228,16 @@ void handleREAD() {
   Serial.print(sendBuffer[ventByte]);
   Serial.println('0');
 
-  time = micros();
+  lastEventTime = micros();
 }
 
 bool itsbeentoolong() {
   unsigned long now = micros();
-  unsigned long duration = (now >= time) ? (now - time) : ((ULONG_MAX - time) + now);
-  if (duration > timeout) {
-    shutdown();
+  unsigned long duration = (now >= lastEventTime) ? (now - lastEventTime) : ((ULONG_MAX - lastEventTime) + now);
+  if (duration > lastEventTimeout) {
+    return true;
   }
+  return false;
 }
 
 void handleCHAN() {
