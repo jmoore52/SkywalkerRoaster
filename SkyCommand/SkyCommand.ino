@@ -16,17 +16,19 @@ uint8_t receiveBuffer[roasterLength];
 uint8_t sendBuffer[controllerLength];
 
 int ventByte = 0;
-int drumByte = 3;
-int coolByte = 2;
 int filterByte = 1;
+int coolByte = 2;
+int drumByte = 3;
 int heatByte = 4;
 int checkByte = 5;
 
+//Failsafe variables
+const int maxTemp = 300;
 double temp = 0.0;
+char unitType = 'F'; //Celcius and Farenheit 
 
 unsigned long lastEventTime = 0;
 unsigned long lastEventTimeout = 10000000;
-char CorF = 'F';
 
 void setControlChecksum() {
   uint8_t sum = 0;
@@ -47,6 +49,12 @@ void shutdown() {  //Turn everything off!
   }
 }
 
+void eStop() { //Emergency stop, heat to 0 and vent to 100
+  setValue(&sendBuffer[heatByte], 0);
+  setValue(&sendBuffer[ventByte], 100);
+}
+
+
 void pulsePin(int pin, int duration) {
   //Assuming pin is HIGH when we get it
   digitalWrite(pin, LOW);
@@ -55,7 +63,7 @@ void pulsePin(int pin, int duration) {
   //we leave it high
 }
 
-void sendMessage() {
+void sendRoasterMessage() {
   //send Preamble
   pulsePin(txPin, 7500);
   delayMicroseconds(3800);
@@ -97,12 +105,13 @@ double calculateTemp() {
              + 3879.431274654493 * x * x * x * y + -6885.682277959339 * x * x * y * y
              + 2868.4191998911865 * x * y * y * y + -1349.1588373011923 * y * y * y * y;
 
-  if (CorF == 'C') v = (v - 32) * 5 / 9;
+  if (unitType == 'C') v = (v - 32) * 5 / 9;
 
   return v;
 }
 
-void getMessage(int bytes, int pin) {
+//Communication with roaster
+void receiveSerialBitsFromRoaster(int bytes, int pin) {
   unsigned long timeIntervals[roasterLength * 8];
   unsigned long pulseDuration = 0;
   int bits = bytes * 8;
@@ -160,7 +169,7 @@ void getRoasterMessage() {
 
   while (!passedChecksum) {
     count += 1;
-    getMessage(roasterLength, rxPin);
+    receiveSerialBitsFromRoaster(roasterLength, rxPin);
     passedChecksum = calculateRoasterChecksum();
   }
 #ifdef __DEBUG__
@@ -215,69 +224,27 @@ void handleDRUM(uint8_t value) {
 }
 
 void handleREAD() {
-  Serial.print(0.0);
+  Serial.print(0.0); //ambient temperature
   Serial.print(',');
-  Serial.print(temp);
+  Serial.print(temp); //channel 1
   Serial.print(',');
-  Serial.print(temp);
+  Serial.print(temp); //channel 2
   Serial.print(',');
-  Serial.print(sendBuffer[heatByte]);
+  Serial.print(sendBuffer[heatByte]); //heater
   Serial.print(',');
-  Serial.print(sendBuffer[ventByte]);
+  Serial.print(sendBuffer[ventByte]); //fan
   Serial.print(',');
-  Serial.println('0');
+  Serial.println('0'); //SV - PID set value
 
   lastEventTime = micros();
 }
 
-bool itsbeentoolong() {
-  unsigned long now = micros();
-  unsigned long duration = now - lastEventTime;
-  //if (duration < 0) {       // Commented out because compiler states comparison of unsigned expression < 0 is always false
-  //  duration = (ULONG_MAX - lastEventTime) + now;  //I think this is right.. right?
-  //}
-  if (duration > lastEventTimeout) {
-    return true;
-  }
-  return false;
-}
 
 void handleCHAN() {
   Serial.println("# Active channels set to 0200");
 }
 
-void setup() {
-  //ok.. Talking to myself here.. but lets do a sanity check.
-  //The idea is that the loop will handle any requests from serial.
-  //While the timer which runs every 10ms will send the control message to the roaster.
-  Serial.begin(115200);
-  Serial.setTimeout(100);
-  pinMode(txPin, OUTPUT);
-  shutdown();
-
-  //ITimer1.init();
-  //ITimer1.attachInterruptInterval(750, sendMessage);
-}
-
-void loop() {
-  //Don't want the roaster be uncontrolled.. By itself, if you don't send a command in 1sec it will shutdown
-  //But I also want to ensure the arduino is getting commands from something.
-  //I think a safeguard for this might be to ensure we're regularly receiving control messages.
-  //If Artisan is on, it should be polling for temps every few seconds. This requires we get a VALID control command.
-  //I also want to add some sort of over temp protection. Butthis is the wild west. Don't burn your roaster and/or house down.
-
-  if (itsbeentoolong()) {
-    //TODO: Maybe consider moving this logic to the interrupt handler
-    //That way if the arduino is having issues, the interrupt handler
-    //Will stop sending messages to the roaster and it'll shut down.
-
-    shutdown(); //We turn everything off
-  }
-
-  sendMessage();
-
-  getRoasterMessage();
-
+void getArtisanMessage() {
   if (Serial.available() > 0) {
     String input = Serial.readString();
 
@@ -301,6 +268,8 @@ void loop() {
       handleVENT(value);
     } else if (command == "OFF") {  //Shut it down
       shutdown();
+    } else if (command == "ESTOP") {  //Emergency stop heat to 0 and vent to 100
+      eStop();
     } else if (command == "DRUM") {  //Start the drum
       handleDRUM(value);
     } else if (command == "FILTER") {  //Turn on the filter fan
@@ -310,7 +279,72 @@ void loop() {
     } else if (command == "CHAN") {  //Hanlde the TC4 init message
       handleCHAN();
     } else if (command == "UNITS") {
-      if (split >= 0) CorF = input.charAt(split + 1);
+      if (split >= 0) unitType = input.charAt(split + 1);
     }
   }
+}
+
+//Failsafe functions
+    //Don't want the roaster be uncontrolled.. By itself, if you don't send a command in 1sec it will shutdown
+    //But I also want to ensure the arduino is getting commands from something.
+    //I think a safeguard for this might be to ensure we're regularly receiving control messages.
+    //If Artisan is on, it should be polling for temps every few seconds. This requires we get a VALID control command.
+    //I also want to add some sort of over temp protection. Butthis is the wild west. Don't burn your roaster and/or house down.
+
+  bool itsbeentoolong() {   //Checks if too much time has passed since the last control message
+    unsigned long now = micros();
+    unsigned long duration = now - lastEventTime;
+    //if (duration < 0) {       // Commented out because compiler states comparison of unsigned expression < 0 is always false
+    //  duration = (ULONG_MAX - lastEventTime) + now;  //I think this is right.. right?
+    //}
+    if (duration > lastEventTimeout) {
+      return true;
+    }
+    return false;
+  }
+
+  bool isTemperatureOverLimit() {   //Checks if the current temperature exceeds the maximum allowed temperature
+    if(temp > maxTemp) {
+      return true;
+    }
+    return false;
+  }
+
+  void failSafeChecks() {
+
+    if (itsbeentoolong()) {
+      //TODO: Maybe consider moving this logic to the interrupt handler
+      //That way if the arduino is having issues, the interrupt handler
+      //Will stop sending messages to the roaster and it'll shut down.
+      shutdown(); //Turn everything off if the last control message is too old
+    }
+
+    if (isTemperatureOverLimit()) {
+      eStop(); //Possible temperature runaway? Emergency stop
+    }
+  }
+
+//Main loops
+void setup() {
+  //ok.. Talking to myself here.. but lets do a sanity check.
+  //The idea is that the loop will handle any requests from serial.
+  //While the timer which runs every 10ms will send the control message to the roaster.
+  Serial.begin(115200);
+  Serial.setTimeout(100);
+  pinMode(txPin, OUTPUT);
+  shutdown();
+
+  //ITimer1.init();
+  //ITimer1.attachInterruptInterval(750, sendRoasterMessage);
+}
+
+void loop() {
+  
+  failSafeChecks();
+
+  getRoasterMessage();
+
+  getArtisanMessage();
+
+  sendRoasterMessage();
 }
