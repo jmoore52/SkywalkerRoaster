@@ -7,10 +7,12 @@
 const int txPin = 3;
 const int rxPin = 2;
 
-const int preamble = 7000;
-const int one_length = 1200;
-const int roasterLength = 7;
-const int controllerLength = 6;
+const int preamble = 7000; //microseconds
+const int one_length = 1200; // Threshold for interpreting a bit as '1', in microseconds.
+const int roasterLength = 7; //Bytes
+const int controllerLength = 6; //Bytes
+const int TIMEOUT_PULSEIN = 2000;  // Timeout (microseconds) for every pulseIn call  chatGPT "Since your longest pulse for a binary '1' is ~1.5ms, and the time between bits is 750 microseconds, you'll want your TIMEOUT_PULSEIN to be slightly longer than 1.5ms to ensure you capture the entire pulse. You might set it to around 2ms for safety."
+const int TOTAL_TIMEOUT = 800;    // Total timeout (milliseconds) for the whole receiving process
 
 uint8_t receiveBuffer[roasterLength];
 uint8_t sendBuffer[controllerLength];
@@ -23,10 +25,12 @@ int heatByte = 4;
 int checkByte = 5;
 
 double temp = 0.0;
+char CorF = 'F';
 
 unsigned long lastEventTime = 0;
 unsigned long lastEventTimeout = 10000000;
-char CorF = 'F';
+bool failedToReadRoaster = false;
+int roasterReadAttempts = 0;
 
 void setControlChecksum() {
   uint8_t sum = 0;
@@ -102,29 +106,53 @@ double calculateTemp() {
   return v;
 }
 
-void getMessage(int bytes, int pin) {
-  unsigned long timeIntervals[roasterLength * 8];
-  unsigned long pulseDuration = 0;
-  int bits = bytes * 8;
+void receiveSerialBitsFromRoaster(int bytes, int pin) {  //Receives serial bits from the roaster and stores them in the receive buffer.
+unsigned long timeIntervals[bytes * 8]; //which would in this case be the same as roasterLength
+unsigned long pulseDuration = 0;
+unsigned long startTime = millis();
+int bits = bytes * 8;
+bool dataReceived = false;
 
-  while (pulseDuration < preamble) {  //Wait for it or exut
-    pulseDuration = pulseIn(pin, LOW);
-  }
+// while (pulseDuration < preamble) {  //Wait for it or exut
+//   pulseDuration = pulseIn(pin, LOW);
+// }
 
-  for (int i = 0; i < bits; i++) {  //Read the proper number of bits..
-    timeIntervals[i] = pulseIn(pin, LOW);
-  }
 
-  for (int i = 0; i < 7; i++) {  //zero that buffer
-    receiveBuffer[i] = 0;
-  }
-
-  for (int i = 0; i < bits; i++) {  //Convert timings to bits
-    //Bits are received in LSB order..
-    if (timeIntervals[i] > one_length) {  // we received a 1
-      receiveBuffer[i / 8] |= (1 << (i % 8));
+while (!dataReceived && (millis() - startTime < TOTAL_TIMEOUT)) {
+    pulseDuration = pulseIn(pin, LOW, TIMEOUT_PULSEIN);
+    if (pulseDuration >= (preamble - 500) && pulseDuration <= (preamble + 500)) { // Check that the pulse is approximately 7.5ms
+      dataReceived = true; // Preamble detected
+      break;
     }
+}
+if (!dataReceived) {
+  failedToReadRoaster = true;
+  return; //ends the function early
+}
+
+for (int i = 0; i < bits; i++) {  //Read the proper number of bits..
+  unsigned long duration = pulseIn(pin, LOW, TIMEOUT_PULSEIN);
+  if (duration == 0) {
+    #ifdef __DEBUG__
+      Serial.print("Timeout or no pulse detected at bit ");
+      Serial.println(i);
+    #endif
+    // Handle the error, e.g., break, set an error flag, etc.
+    failedToReadRoaster = true;
+    return;
   }
+  timeIntervals[i] = duration;
+}
+
+memset(receiveBuffer, 0, bytes); //zero that buffer
+
+for (int i = 0; i < bits; i++) {  //Convert timings to bits
+  //Bits are received in LSB order..
+  if (timeIntervals[i] > one_length) {  // we received a 1
+    receiveBuffer[i / 8] |= (1 << (i % 8));
+  }
+}
+failedToReadRoaster = false;
 }
 
 bool calculateRoasterChecksum() {
@@ -151,31 +179,43 @@ void printBuffer(int bytes) {
 }
 
 void getRoasterMessage() {
-#ifdef __DEBUG__
-  Serial.print("R ");
-#endif
+  #ifdef __DEBUG__
+    Serial.print("Debug: Receiving data:");
+  #endif
 
-  bool passedChecksum = false;
-  int count = 0;
+    bool passedChecksum = false;
+    failedToReadRoaster = false;
 
-  while (!passedChecksum) {
-    count += 1;
-    getMessage(roasterLength, rxPin);
-    passedChecksum = calculateRoasterChecksum();
-  }
-#ifdef __DEBUG__
-  printBuffer(roasterLength);
-#endif
+      roasterReadAttempts += 1; //Counting number of read attempt
+      if (roasterReadAttempts > 99){
+      roasterReadAttempts = 99;
+      }
 
-#ifdef __WARN__
-  if (count > 1) {
-    Serial.print("[!] WARN: Took ");
-    Serial.print(count);
-    Serial.println(" tries to read roaster.");
-  }
-#endif
+      receiveSerialBitsFromRoaster(roasterLength, rxPin);
+      passedChecksum = calculateRoasterChecksum();
 
-  temp = calculateTemp();
+
+    if (passedChecksum == false || failedToReadRoaster == true) {
+      #ifdef __WARN__
+      Serial.println(" Failed to read roaster.");
+      #endif
+      return;
+    } else {
+      roasterReadAttempts = 0;
+    }
+
+  #ifdef __DEBUG__
+    printBuffer(roasterLength);
+  #endif
+    
+  #ifdef __WARN__
+    if (roasterReadAttempts > 1) {
+      Serial.print("[!] WARNING: Took ");
+      Serial.print(roasterReadAttempts);
+      Serial.println(" tries to read roaster.");
+    }
+  #endif
+    temp = calculateTemp();
 }
 void handleHEAT(uint8_t value) {
   if (value <= 100) {
