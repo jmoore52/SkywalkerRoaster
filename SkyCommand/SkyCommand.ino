@@ -11,6 +11,7 @@ const int preamble = 7000; //microseconds
 const int one_length = 1200; // Threshold for interpreting a bit as '1', in microseconds.
 const int roasterLength = 7; //Bytes
 const int controllerLength = 6; //Bytes
+const int TIMEOUT_PREAMPLE_PULSEIN = 10000; //Timeout (microseconds) for preample detection needs to be longer than preamble.
 const int TIMEOUT_PULSEIN = 2000;  // Timeout (microseconds) for every pulseIn call  chatGPT "Since your longest pulse for a binary '1' is ~1.5ms, and the time between bits is 750 microseconds, you'll want your TIMEOUT_PULSEIN to be slightly longer than 1.5ms to ensure you capture the entire pulse. You might set it to around 2ms for safety."
 const int TOTAL_TIMEOUT = 800;    // Total timeout (milliseconds) for the whole receiving process
 
@@ -107,52 +108,50 @@ double calculateTemp() {
 }
 
 void receiveSerialBitsFromRoaster(int bytes, int pin) {  //Receives serial bits from the roaster and stores them in the receive buffer.
-unsigned long timeIntervals[bytes * 8]; //which would in this case be the same as roasterLength
-unsigned long pulseDuration = 0;
-unsigned long startTime = millis();
-int bits = bytes * 8;
-bool dataReceived = false;
+  unsigned long timeIntervals[bytes * 8]; //which would in this case be the same as roasterLength
+  unsigned long pulseDuration = 0;
+  unsigned long startTime = millis();
+  int bits = bytes * 8;
+  bool preambleDetected = false;
 
-// while (pulseDuration < preamble) {  //Wait for it or exut
-//   pulseDuration = pulseIn(pin, LOW);
-// }
-
-
-while (!dataReceived && (millis() - startTime < TOTAL_TIMEOUT)) {
-    pulseDuration = pulseIn(pin, LOW, TIMEOUT_PULSEIN);
-    if (pulseDuration >= (preamble - 500) && pulseDuration <= (preamble + 500)) { // Check that the pulse is approximately 7.5ms
-      dataReceived = true; // Preamble detected
-      break;
-    }
-}
-if (!dataReceived) {
-  failedToReadRoaster = true;
-  return; //ends the function early
-}
-
-for (int i = 0; i < bits; i++) {  //Read the proper number of bits..
-  unsigned long duration = pulseIn(pin, LOW, TIMEOUT_PULSEIN);
-  if (duration == 0) {
-    #ifdef __DEBUG__
-      Serial.print("Timeout or no pulse detected at bit ");
-      Serial.println(i);
-    #endif
-    // Handle the error, e.g., break, set an error flag, etc.
+  while (millis() - startTime < TOTAL_TIMEOUT) {
+      pulseDuration = pulseIn(pin, LOW, TIMEOUT_PREAMPLE_PULSEIN);
+      if (pulseDuration >= (preamble - 500) && pulseDuration <= (preamble + 1000)) { // Check that the pulse is approximately 7.5ms
+        preambleDetected = true; // Preamble detected
+        #ifdef __DEBUG__
+          Serial.println("Preamble detected");
+        #endif
+        break;
+      }
+  }
+  if (!preambleDetected) {
     failedToReadRoaster = true;
-    return;
+    return; //ends the function early
   }
-  timeIntervals[i] = duration;
-}
 
-memset(receiveBuffer, 0, bytes); //zero that buffer
-
-for (int i = 0; i < bits; i++) {  //Convert timings to bits
-  //Bits are received in LSB order..
-  if (timeIntervals[i] > one_length) {  // we received a 1
-    receiveBuffer[i / 8] |= (1 << (i % 8));
+  for (int i = 0; i < bits; i++) {  //Read the proper number of bits..
+    unsigned long duration = pulseIn(pin, LOW, TIMEOUT_PULSEIN);
+    if (duration == 0) {
+      #ifdef __DEBUG__
+        Serial.print("Timeout or no pulse detected at bit ");
+        Serial.println(i);
+      #endif
+      // Handle the error, e.g., break, set an error flag, etc.
+      failedToReadRoaster = true;
+      return;
+    }
+    timeIntervals[i] = duration;
   }
-}
-failedToReadRoaster = false;
+
+  memset(receiveBuffer, 0, bytes); //zero that buffer
+
+  for (int i = 0; i < bits; i++) {  //Convert timings to bits
+    //Bits are received in LSB order..
+    if (timeIntervals[i] > one_length) {  // we received a 1
+      receiveBuffer[i / 8] |= (1 << (i % 8));
+    }
+  }
+  failedToReadRoaster = false;
 }
 
 bool calculateRoasterChecksum() {
