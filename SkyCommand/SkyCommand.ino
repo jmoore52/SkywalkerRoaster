@@ -12,7 +12,7 @@ const int one_length = 1200; // Threshold for interpreting a bit as '1', in micr
 const int roasterLength = 7; //Bytes
 const int controllerLength = 6; //Bytes
 const int TIMEOUT_PREAMPLE_PULSEIN = 10000; //Timeout (microseconds) for preample detection needs to be longer than preamble.
-const int TIMEOUT_PULSEIN = 2000;  // Timeout (microseconds) for every pulseIn call  chatGPT "Since your longest pulse for a binary '1' is ~1.5ms, and the time between bits is 750 microseconds, you'll want your TIMEOUT_PULSEIN to be slightly longer than 1.5ms to ensure you capture the entire pulse. You might set it to around 2ms for safety."
+const int TIMEOUT_PULSEIN = 4000;  // Timeout (microseconds) for every pulseIn call  chatGPT "Since your longest pulse for a binary '1' is ~1.5ms, and the time between bits is 750 microseconds, you'll want your TIMEOUT_PULSEIN to be slightly longer than 1.5ms to ensure you capture the entire pulse. You might set it to around 2ms for safety."
 const int TOTAL_TIMEOUT = 800;    // Total timeout (milliseconds) for the whole receiving process
 
 uint8_t receiveBuffer[roasterLength];
