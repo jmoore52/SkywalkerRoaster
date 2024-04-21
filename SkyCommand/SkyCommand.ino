@@ -130,7 +130,7 @@ void receiveSerialBitsFromRoaster(int bytes, int pin) {  //Receives serial bits 
   }
 
   for (int i = 0; i < bits; i++) {  //Read the proper number of bits..
-    unsigned long duration = pulseIn(pin, LOW, TIMEOUT_PULSEIN);
+    unsigned long duration = pulseIn(pin, LOW);
     if (duration == 0) {
       #ifdef __DEBUG__
         Serial.print("Timeout or no pulse detected at bit ");
