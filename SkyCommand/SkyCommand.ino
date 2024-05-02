@@ -11,9 +11,9 @@ const int preamble = 7000; //microseconds
 const int one_length = 1200; // Threshold for interpreting a bit as '1', in microseconds.
 const int roasterLength = 7; //Bytes
 const int controllerLength = 6; //Bytes
-const long int TIMEOUT_PREAMBLE_PULSEIN = 30000; //Timeout (microseconds) for preample detection needs to be longer than preamble. (10ms + 7.5ms + 4ms)*1000 = 20500 µs
-const int TIMEOUT_PREAMBLE_SEARCH = 400; // 7.5ms (preamble) + 133.5ms (if all 56bits are logical ones) + 10ms (interval between messages) = 151ms, Searhing for preamble for the time of two messages and quite much margin.
-const int TIMEOUT_LOGIC_PULSEIN = 7000; // Timeout (microseconds) for every pulseIn call  chatGPT "Since your longest pulse for a binary '1' is ~1.5ms, and the time between bits is 750 microseconds, you'll want your TIMEOUT_PULSEIN to be slightly longer than 1.5ms to ensure you capture the entire pulse. You might set it to around 2ms for safety."
+const int TIMEOUT_PREAMBLE_SEARCH = 400; // Timeout (milliseconds) 7.5ms (preamble) + 133.5ms (if all 56bits are logical ones) + 10ms (interval between messages) = 151ms, Searhing for preamble for the time of two messages and quite much margin.
+const int TIMEOUT_PREAMBLE_PULSEIN = 30000; //Timeout (microseconds), for preample detection (10ms (time between messages) + 7.5ms (preamble) + 4ms (time to first bit after preamble))*1000 = 20500 µs
+const int TIMEOUT_LOGIC_PULSEIN = 7000; // Timeout (microseconds) for every pulseIn call. (4ms (to first bit) + 1,5ms (logic 1) + 0,75ms (time between pulse) )*1000= 6250 µs 
 
 uint8_t receiveBuffer[roasterLength];
 uint8_t sendBuffer[controllerLength];
