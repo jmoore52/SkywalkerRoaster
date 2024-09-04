@@ -22,12 +22,24 @@ int filterByte = 1;
 int heatByte = 4;
 int checkByte = 5;
 
-double temp = 0.0;
+double beanTemp = 0.0;
+double envTemp = 0.0;
 
 unsigned long lastEventTime = 0;
 unsigned long lastEventTimeout = 10000000;
 char CorF = 'F';
 
+
+// MAX31865
+#include <Adafruit_MAX31865.h>
+
+Adafruit_MAX31865 beanThermo = Adafruit_MAX31865(10, 11, 12, 13);
+Adafruit_MAX31865 envThermo = Adafruit_MAX31865(9, 11, 12, 13);
+
+#define RREF 430.0
+#define RNOMINAL 100.0
+
+//
 void setControlChecksum() {
   uint8_t sum = 0;
   for (int i = 0; i < (controllerLength - 1); i++) {
@@ -73,31 +85,34 @@ void sendMessage() {
   }
 }
 
-double calculateTemp() {
-  /* 
-    I really hate this. 
-    It seems to work.. but I feel like there must be a better way than 
-    using a 4th degree polynomial to model this but I sure can't seem to figure it out. 
-  */
+double calculateBeanTemp() {
 
-  double x = ((receiveBuffer[0] << 8) + receiveBuffer[1]) / 1000.0;
-  double y = ((receiveBuffer[2] << 8) + receiveBuffer[3]) / 1000.0;
+  //MAX31865 TEMP
+  double v = 0;
+  uint8_t fault = beanThermo.readFault();
+  if (fault) {
+    // Serial.print("Fault 0x");
+    // Serial.println(fault, HEX);
+    beanThermo.clearFault();
+  } else {
+    v = beanThermo.temperature(RNOMINAL, RREF);
+  }
 
-#ifdef __DEBUG__
-  Serial.print(x);
-  Serial.print(',');
-  Serial.println(y);
-#endif
+  return v;
+}
 
-  double v = 583.1509258523457 + -714.0345395202813 * x + -196.071718077524 * y
-             + 413.37964344228334 * x * x + 2238.149675349052 * x * y
-             + -4099.91031297056 * y * y + 357.49007607425233 * x * x * x
-             + -5001.419602972793 * x * x * y + 8242.08618555862 * x * y * y
-             + 247.6124684730026 * y * y * y + -555.8643213534281 * x * x * x * x
-             + 3879.431274654493 * x * x * x * y + -6885.682277959339 * x * x * y * y
-             + 2868.4191998911865 * x * y * y * y + -1349.1588373011923 * y * y * y * y;
+double calculateEnvTemp() {
 
-  if (CorF == 'C') v = (v - 32) * 5 / 9;
+  //MAX31865 TEMP
+  double v = 0;
+  uint8_t fault = envThermo.readFault();
+  if (fault) {
+    // Serial.print("Fault 0x");
+    // Serial.println(fault, HEX);
+    envThermo.clearFault();
+  } else {
+    v = envThermo.temperature(RNOMINAL, RREF);
+  }
 
   return v;
 }
@@ -175,7 +190,11 @@ void getRoasterMessage() {
   }
 #endif
 
-  temp = calculateTemp();
+  beanTemp = calculateBeanTemp();
+  envTemp = calculateEnvTemp();
+  // Serial.print("Temp:");
+  // Serial.println(temp);
+
 }
 void handleHEAT(uint8_t value) {
   if (value <= 100) {
@@ -217,9 +236,9 @@ void handleDRUM(uint8_t value) {
 void handleREAD() {
   Serial.print(0.0);
   Serial.print(',');
-  Serial.print(temp);
+  Serial.print(envTemp);
   Serial.print(',');
-  Serial.print(temp);
+  Serial.print(beanTemp);
   Serial.print(',');
   Serial.print(sendBuffer[heatByte]);
   Serial.print(',');
@@ -251,18 +270,20 @@ void setup() {
   //The idea is that the loop will handle any requests from serial.
   //While the timer which runs every 10ms will send the control message to the roaster.
   Serial.begin(115200);
-  // Serial.println("Hello, World!"); // Test line
-
   Serial.setTimeout(100);
   pinMode(txPin, OUTPUT);
   shutdown();
+
+  //MAX31865
+  beanThermo.begin(MAX31865_4WIRE);  // 2WIRE, 3WIRE, 4WIRE 
+  envThermo.begin(MAX31865_4WIRE);  // 2WIRE, 3WIRE, 4WIRE 
+  //
 
   //ITimer1.init();
   //ITimer1.attachInterruptInterval(750, sendMessage);
 }
 
 void loop() {
-  // Serial.println("Looping...");  // Test line
   //Don't want the roaster be uncontrolled.. By itself, if you don't send a command in 1sec it will shutdown
   //But I also want to ensure the arduino is getting commands from something.
   //I think a safeguard for this might be to ensure we're regularly receiving control messages.
@@ -282,148 +303,38 @@ void loop() {
   getRoasterMessage();
 
   if (Serial.available() > 0) {
-
     String input = Serial.readString();
-    input.trim();
-    parseAndExecuteCommands(input);  // Handle multiple commands
-  }
-  // if (Serial.available() > 0) {
-  //   String input = Serial.readString();
 
-  //   uint8_t value = 0;
-  //   input.trim();
-  //   int split = input.indexOf(';');
-  //   String command = "";
-
-  //   if (split >= 0) {
-  //     command = input.substring(0, split);
-  //     value = input.substring(split + 1).toInt();
-  //   } else {
-  //     command = input;
-  //   }
-
-  //   if (command == "READ") {
-  //     handleREAD();
-  //   } else if (command == "OT1") {  //Set Heater Duty
-  //     handleHEAT(value);
-  //   } else if (command == "OT2") {  //Set Fan Duty
-  //     handleVENT(value);
-  //   } else if (command == "OFF") {  //Shut it down
-  //     shutdown();
-  //   } else if (command == "DRUM") {  //Start the drum
-  //     handleDRUM(value);
-  //   } else if (command == "FILTER") {  //Turn on the filter fan
-  //     handleFILTER(value);
-  //   } else if (command == "COOL") {  //Cool the beans
-  //     handleCOOL(value);
-  //   } else if (command == "CHAN") {  //Hanlde the TC4 init message
-  //     handleCHAN();
-  //   } else if (command == "UNITS") {
-  //     if (split >= 0) CorF = input.charAt(split + 1);
-  //   }
-  // }
-
-}
-
-// void parseAndExecuteCommands(String input) {
-//   while (input.length() > 0) {
-//     int split = input.indexOf(';');
-//     String command;
-//     uint8_t value = 0;
-
-//     if (split >= 0) {
-//       command = input.substring(0, split);
-//       input = input.substring(split + 1);
-
-//       // Find the next semicolon if any, to determine the value
-//       int nextSplit = input.indexOf(';');
-//       if (nextSplit >= 0) {
-//         value = input.substring(0, nextSplit).toInt();
-//         input = input.substring(nextSplit + 1);
-//       } else {
-//         value = input.toInt();  // Last value or single command
-//         input = "";
-//       }
-//     } else {
-//       command = input;
-//       input = "";
-//     }
-
-//     executeCommand(command, value);
-//   }
-// }
-
-void parseAndExecuteCommands(String input) {
-  // Serial.println("Starting command parsing...");
-
-  while (input.length() > 0) {
-    // Serial.print("Remaining input: ");
-    // Serial.println(input);
-
-    int split = input.indexOf(';');
-    String command;
     uint8_t value = 0;
+    input.trim();
+    int split = input.indexOf(';');
+    String command = "";
 
     if (split >= 0) {
       command = input.substring(0, split);
-      input = input.substring(split + 1);
-
-      // Serial.print("Parsed command: ");
-      // Serial.println(command);
-
-      // Find the next semicolon if any, to determine the value
-      int nextSplit = input.indexOf(';');
-      if (nextSplit >= 0) {
-        value = input.substring(0, nextSplit).toInt();
-        input = input.substring(nextSplit + 1);
-      } else {
-        value = input.toInt();  // Last value or single command
-        input = "";
-      }
-
-      // Serial.print("Parsed value: ");
-      // Serial.println(value);
+      value = input.substring(split + 1).toInt();
     } else {
       command = input;
-      input = "";
-
-      // Serial.print("Final command: ");
-      // Serial.println(command);
     }
 
-    // Serial.print("Executing command: ");
-    // Serial.print(command);
-    // Serial.print(" with value: ");
-    // Serial.println(value);
-
-    executeCommand(command, value);
-  }
-
-  // Serial.println("Finished command parsing.");
-}
-
-
-void executeCommand(String command, uint8_t value) {
-  if (command == "READ") {
-    handleREAD();
-  } else if (command == "OT1") {  // Set Heater Duty
-    handleHEAT(value);
-  } else if (command == "OT2") {  // Set Fan Duty
-    handleVENT(value);
-  } else if (command == "OFF") {  // Shut it down
-    shutdown();
-  } else if (command == "DRUM") {  // Start the drum
-    handleDRUM(value);
-  } else if (command == "FILTER") {  // Turn on the filter fan
-    handleFILTER(value);
-  } else if (command == "COOL") {  // Cool the beans
-    handleCOOL(value);
-  } else if (command == "CHAN") {  // Handle the TC4 init message
-    handleCHAN();
-  } else if (command == "UNITS") {
-    if (value != 0) CorF = value;
+    if (command == "READ") {
+      handleREAD();
+    } else if (command == "OT1") {  //Set Heater Duty
+      handleHEAT(value);
+    } else if (command == "OT2") {  //Set Fan Duty
+      handleVENT(value);
+    } else if (command == "OFF") {  //Shut it down
+      shutdown();
+    } else if (command == "DRUM") {  //Start the drum
+      handleDRUM(value);
+    } else if (command == "FILTER") {  //Turn on the filter fan
+      handleFILTER(value);
+    } else if (command == "COOL") {  //Cool the beans
+      handleCOOL(value);
+    } else if (command == "CHAN") {  //Hanlde the TC4 init message
+      handleCHAN();
+    } else if (command == "UNITS") {
+      if (split >= 0) CorF = input.charAt(split + 1);
+    }
   }
 }
-
-
-
