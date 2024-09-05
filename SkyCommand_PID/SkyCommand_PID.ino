@@ -38,10 +38,39 @@ Adafruit_MAX31865 envThermo = Adafruit_MAX31865(9, 11, 12, 13);
 
 #define RREF 430.0
 #define RNOMINAL 100.0
-//
-// additional serial port
-#include <SoftwareSerial.h>
-SoftwareSerial debugSerial(10, 11);  // RX, TX for debugging (choose your pins)
+const unsigned long tempReadInterval = 1000;  // 1000ms = 1 second delay
+unsigned long lastBeanTempReadTime = 0;
+unsigned long lastEnvTempReadTime = 0;
+double lastBeanTemp = 0.0;
+double lastEnvTemp = 0.0;
+
+
+// PID
+#include <AutoPID.h>
+
+bool tuning = false;         // To check if tuning is in progress
+bool PIDFirmwareStarted = false; //PID firmware requests started
+unsigned long tuningStartTime;
+unsigned long lastTuneTime = 0;   // To control the frequency of each tuning step
+double tuningOutput = 0;  // To store the output of each step
+unsigned long lastTuningUpdate = 0;
+const unsigned long tuningInterval = 2000;  // 1-second interval for tuning updates
+
+unsigned long lastPIDFirmwareUpdate = 0;
+const unsigned long firmwarePIDInterval = 2000;  // 1-second interval for tuning updates
+
+// PID constants (initial values)
+
+double setpoint = 0;  // Target temperature
+double input, output;
+double Kp = 2.0, Ki = 0.03, Kd = 0.4;
+
+// Set up the heater output range (e.g., 0-100 for percentage control)
+AutoPID myPID(&input, &setpoint, &output, 0, 100, Kp, Ki, Kd);
+
+// Variables to store error values
+double prevError = 0.0;       // Previous error for derivative term
+double integral = 0.0;        // Accumulated error for integral term
 
 //
 void setControlChecksum() {
@@ -89,36 +118,84 @@ void sendMessage() {
   }
 }
 
-double calculateBeanTemp() {
+// double calculateBeanTemp() {
 
-  //MAX31865 TEMP
-  double v = 0;
-  uint8_t fault = beanThermo.readFault();
-  if (fault) {
-    // Serial.print("Fault 0x");
-    // Serial.println(fault, HEX);
-    beanThermo.clearFault();
-  } else {
-    v = beanThermo.temperature(RNOMINAL, RREF);
+//   //MAX31865 TEMP
+//   double v = 0;
+//   uint8_t fault = beanThermo.readFault();
+//   if (fault) {
+//     // Serial.print("Fault 0x");
+//     // Serial.println(fault, HEX);
+//     beanThermo.clearFault();
+//   } else {
+//     v = beanThermo.temperature(RNOMINAL, RREF);
+//   }
+//   // Serial.print( "Bean Temp: ");
+//   // Serial.println( v);
+//   return v;
+// }
+
+// double calculateEnvTemp() {
+
+//   //MAX31865 TEMP
+//   double v = 0;
+//   uint8_t fault = envThermo.readFault();
+//   if (fault) {
+//     // Serial.print("Fault 0x");
+//     // Serial.println(fault, HEX);
+//     envThermo.clearFault();
+//   } else {
+//     v = envThermo.temperature(RNOMINAL, RREF);
+//   }
+
+//   return v;
+// }
+
+double calculateBeanTemp() {
+  // Current time
+  unsigned long currentMillis = millis();
+  
+  // Check if enough time has passed since the last reading
+  if (currentMillis - lastBeanTempReadTime >= tempReadInterval) {
+    lastBeanTempReadTime = currentMillis;  // Update the last read time
+    // Serial.println("calculateBeanTemp");
+    // MAX31865 TEMP
+    uint8_t fault = beanThermo.readFault();
+    if (fault) {
+      // Serial.print("Fault 0x");
+      // Serial.println(fault, HEX);
+      beanThermo.clearFault();
+    } else {
+      lastBeanTemp = beanThermo.temperature(RNOMINAL, RREF);
+    }
   }
 
-  return v;
+  // Return the last temperature reading
+  return lastBeanTemp;
 }
 
 double calculateEnvTemp() {
+  // Current time
+  unsigned long currentMillis = millis();
+  
+  // Check if enough time has passed since the last reading
+  if (currentMillis - lastEnvTempReadTime >= tempReadInterval) {
+    lastEnvTempReadTime = currentMillis;  // Update the last read time
+    // Serial.println("calculateEnvTemp");
 
-  //MAX31865 TEMP
-  double v = 0;
-  uint8_t fault = envThermo.readFault();
-  if (fault) {
-    // Serial.print("Fault 0x");
-    // Serial.println(fault, HEX);
-    envThermo.clearFault();
-  } else {
-    v = envThermo.temperature(RNOMINAL, RREF);
+    // MAX31865 TEMP
+    uint8_t fault = envThermo.readFault();
+    if (fault) {
+      // Serial.print("Fault 0x");
+      // Serial.println(fault, HEX);
+      envThermo.clearFault();
+    } else {
+      lastEnvTemp = envThermo.temperature(RNOMINAL, RREF);
+    }
   }
 
-  return v;
+  // Return the last temperature reading
+  return lastEnvTemp;
 }
 
 void getMessage(int bytes, int pin) {
@@ -194,14 +271,17 @@ void getRoasterMessage() {
   }
 #endif
 
-  beanTemp = calculateBeanTemp();
-  envTemp = calculateEnvTemp();
+beanTemp = calculateBeanTemp();
+envTemp = calculateEnvTemp();
   // Serial.print("Temp:");
   // Serial.println(temp);
 
 }
 void handleHEAT(uint8_t value) {
   if (value <= 100) {
+    Serial.print("handleHEAT - setting Heater to : ");
+    Serial.println(value);  // Debug message for heater control
+
     setValue(&sendBuffer[heatByte], value);
   }
   lastEventTime = micros();
@@ -310,13 +390,6 @@ void loop() {
 
   getRoasterMessage();
 
-  // if (Serial.available()) {
-  //   String artisanData = Serial.readString();
-  //   // Process Artisan data
-  //   debugSerial.print("Received from Artisan: ");  // Log to debug port
-  //   debugSerial.println(artisanData);
-  // }
-  
   if (Serial.available() > 0) {
     String input = Serial.readString();
 
@@ -331,26 +404,111 @@ void loop() {
     } else {
       command = input;
     }
+    
+    if (!tuning) {
+      if (command == "READ") {
+        handleREAD();   
+      } 
+      else if (command == "OT1") {  //Set Heater Duty
+        handleHEAT(value);
+      } 
+      else if (command == "OT2") {  //Set Fan Duty
+        handleVENT(value);
+      } 
+      else if (command == "OFF") {  //Shut it down
+        shutdown();
+      } 
+      else if (command == "DRUM") {  //Start the drum
+        // Serial.print("DRUM");
+        handleDRUM(value);
+      } 
+      else if (command == "FILTER") {  //Turn on the filter fan
+        handleFILTER(value);
+      } 
+      else if (command == "COOL") {  //Cool the beans
+        handleCOOL(value);
+      } 
+      else if (command == "CHAN") {  //Hanlde the TC4 init message
+        handleCHAN();
+      } 
+      else if (command == "UNITS") {
+        if (split >= 0) CorF = input.charAt(split + 1);
+      }
+      else if (command == "SV") {  //Hanlde the TC4 init message
+        handlePIDFirmware(value);
+      } 
 
-    if (command == "READ") {
-      handleREAD();
-    } else if (command == "OT1") {  //Set Heater Duty
-      handleHEAT(value);
-    } else if (command == "OT2") {  //Set Fan Duty
-      handleVENT(value);
-    } else if (command == "OFF") {  //Shut it down
-      shutdown();
-    } else if (command == "DRUM") {  //Start the drum
-      // Serial.print("DRUM");
-      handleDRUM(value);
-    } else if (command == "FILTER") {  //Turn on the filter fan
-      handleFILTER(value);
-    } else if (command == "COOL") {  //Cool the beans
-      handleCOOL(value);
-    } else if (command == "CHAN") {  //Hanlde the TC4 init message
-      handleCHAN();
-    } else if (command == "UNITS") {
-      if (split >= 0) CorF = input.charAt(split + 1);
+      else if (command == "PID_CALIBRATE") {  //Hanlde the TC4 init message
+        handlePidCalibration(value);
+      } 
+    } else  
+    {
+      if (command == "STOP_PID_CALIBRATE") {  
+         tuning = false;  // Set tuning active
+
+      }
     }
+  } //if (Serial.available() > 0)
+
+  if (PIDFirmwareStarted) {
+    executePIDFirmware();
+
   }
+
+
+
+// //PID CALIBRATE
+//   if (tuning) {
+//     if (millis() - lastTuningUpdate >= tuningInterval) {
+
+//       Serial.print (" in tuning ... ")      ;
+//       // Automatically compute the PID output
+//       input = beanTemp;
+//       myPID.run();
+//       // Send the computed output to the heater
+//       handleHEAT((uint8_t)output);
+//       lastTuningUpdate = millis();
+//     }
+
+//   }
+
+
 }
+
+
+void handlePIDFirmware(uint8_t targetTemperature) {
+    // Set the target temperature for PID tuning
+    setpoint = targetTemperature;
+    PIDFirmwareStarted = true;  // Set tuning active
+
+    Serial.print("SV request: ");
+    Serial.println(targetTemperature);
+
+}
+
+void executePIDFirmware() {
+    if (millis() - lastPIDFirmwareUpdate >= firmwarePIDInterval) {
+
+      Serial.print (" executePIDFirmware ... ")      ;
+      // Automatically compute the PID output
+      input = beanTemp;
+      myPID.run();
+      // Send the computed output to the heater
+      handleHEAT((uint8_t)output);
+      lastPIDFirmwareUpdate = millis();
+    }
+}
+
+
+void handlePidCalibration(uint8_t targetTemperature) {
+    // Set the target temperature for PID tuning
+    setpoint = targetTemperature;
+    tuning = true;  // Set tuning active
+    tuningStartTime = millis();
+
+    Serial.print("Starting PID calibration for setpoint: ");
+    Serial.println(targetTemperature);
+}
+
+
+

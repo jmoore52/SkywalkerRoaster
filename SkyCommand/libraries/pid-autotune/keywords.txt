@@ -1,0 +1,21 @@
+#######################################
+# Syntax Coloring Map PID-autotune
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PID KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+PID KEYWORD2
+control KEYWORD2
+tune KEYWORD2
+tuning KEYWORD2
+autotune KEYWORD2
+autotuning KEYWORD2
+nicoles-ziegler KEYWORD2
