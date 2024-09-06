@@ -30,20 +30,20 @@ joblib.dump(scaler, 'scaler.pkl')
 
 # Define the neural network architecture
 model = Sequential([
-    Dense(64, input_dim=X_train.shape[1], activation='relu'),  # Hidden layer
-    Dense(32, activation='relu'),  # Second hidden layer
-    Dense(1, activation='sigmoid')  # Output layer with sigmoid activation
+    Dense(128, input_dim=X_train.shape[1], activation='relu'),  # Increased complexity
+    Dense(64, activation='relu'),  # Second hidden layer
+    Dense(1, activation='linear')  # Linear output layer
 ])
 
 # Compile the model
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
 # Train the model
-model.fit(X_train, y_train / 100.0, validation_data=(X_test, y_test / 100.0), epochs=50, batch_size=32)
+model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=200, batch_size=32)
 
 # Evaluate the model
-loss, mae = model.evaluate(X_test, y_test / 100.0)
-print(f"Test Mean Absolute Error: {mae * 100}")
+loss, mae = model.evaluate(X_test, y_test)
+print(f"Test Mean Absolute Error: {mae}")
 
 # Save the trained model to a file
 model.save('roaster_pid_model.keras')
