@@ -10,7 +10,7 @@ ser = serial.Serial('/dev/cu.usbserial-1422320', 115200, timeout=1)
 # Function to send a command and get a response
 def send_command(command):
     ser.write((command + '\n').encode())  # Send the command to Arduino
-    time.sleep(0.1)  # Give it time to process
+    # time.sleep(0.2)  # Give it time to process
     response = ser.readline().decode('utf-8').strip()  # Read response
     return response
 
@@ -95,9 +95,13 @@ def control_temperature_cycle():
 # Send initial commands to Skywalker roaster
 def send_initial_commands():
     send_command("CHAN;1200")
+    time.sleep(0.5)  # Give it time to process
     send_command("UNITS;C")
+    time.sleep(0.5)  # Give it time to process
     send_command("FILT;70,70,70,70")
+    time.sleep(0.5)  # Give it time to process
     send_command("DRUM;100")
+    time.sleep(0.5)  # Give it time to process
 
 # Main function
 if __name__ == "__main__":

@@ -53,16 +53,18 @@ print(f"Test Mean Absolute Error: {mae}")
 predictions = model.predict(X_test)
 
 # Save the trained model to a file
-model.save('roaster_pid_model.h5')
+model.save('roaster_pid_model.keras')
 
 # Load the trained model
-model = tf.keras.models.load_model('roaster_pid_model.h5')
+model = tf.keras.models.load_model('roaster_pid_model.keras')
 
-# Make predictions based on new input (e.g., live data from the roaster)
-new_data = [[fan_value, current_temp, env_temp]]  # Example new data
-new_data_scaled = scaler.transform(new_data)
-predicted_heater_value = model.predict(new_data_scaled)
+@tf.keras.saving.register_keras_serializable()
+def mse(y_true, y_pred):
+    return tf.reduce_mean(tf.square(y_true - y_pred))
 
-
+model = tf.keras.models.load_model(
+    'roaster_pid_model.h5',
+    custom_objects={'mse': tf.keras.losses.MeanSquaredError()}
+)
 
 
