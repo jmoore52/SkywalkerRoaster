@@ -27,8 +27,8 @@ if __name__ == "__main__":
     # Define the test input values
     fan_value = 50  # Example fan value (between 0-100)
     current_temp = 45.0  # Example current bean temperature
-    env_temp = 43.5  # Example environment temperature
-    target_temp = 60.0  # Target temperature to reach
+    env_temp = 45.0  # Example environment temperature
+    target_temp = 45.1  # Target temperature to reach
 
     # Call the prediction function
     predicted_heater_value = predict_heater_value(fan_value, current_temp, env_temp, target_temp)
