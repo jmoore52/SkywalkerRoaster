@@ -17,7 +17,7 @@ def predict_heater_value(bean_temp, fan_value, future_bean_temp, env_temp):
 
     # Predict the heater value using the model
     predicted_heater_value = model.predict(input_data_scaled)
-    return predicted_heater_value[0][0]  # Return the first predicted value
+    return predicted_heater_value[0][0] * 100  # Scale back to 0-100
 
 
 # Example usage with sample input
