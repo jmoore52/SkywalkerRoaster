@@ -1,19 +1,19 @@
-import sys
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+import joblib
 
 # Load the dataset
-data = pd.read_csv('roaster_data.csv', names=['timestamp', 'heater_value', 'fan_value', 'temperature', 'env_temp'])
+data = pd.read_csv('roaster_data.csv', names=['timestamp', 'heater_value', 'fan_value', 'temperature', 'env_temp', 'target_temp'])
 
 # Drop unnecessary columns (e.g., timestamp)
 data = data.drop(columns=['timestamp'])
 
 # Split the data into features (X) and target (y)
-X = data[['fan_value', 'temperature', 'env_temp']]
+X = data[['fan_value', 'temperature', 'env_temp', 'target_temp']]
 y = data['heater_value']
 
 # Split into training and testing data
@@ -23,6 +23,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
+
+# Save the scaler for future use in the prediction phase
+joblib.dump(scaler, 'scaler.pkl')
 
 # Define the neural network architecture
 model = Sequential([
@@ -41,10 +44,5 @@ history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=5
 loss, mae = model.evaluate(X_test, y_test)
 print(f"Test Mean Absolute Error: {mae}")
 
-# Predict on new data
-predictions = model.predict(X_test)
-
 # Save the trained model to a file
 model.save('roaster_pid_model.keras')
-
-print("Model training and saving complete.")
