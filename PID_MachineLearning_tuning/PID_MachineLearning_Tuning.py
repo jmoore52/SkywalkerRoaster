@@ -35,7 +35,7 @@ def control_temperature_cycle():
     previous_temperature = None
 
     # Set of target temperatures for cycling
-    target_temperatures = [50, 30, 70, 50, 90, 50]
+    target_temperatures = [65, 70, 75, 80]
     current_stage = 0  # Start at the first target temperature
 
     while current_stage < len(target_temperatures):
@@ -73,7 +73,9 @@ def control_temperature_cycle():
             # Move to next stage if stable for required readings
             if stable_readings_count >= required_stable_readings:
                 print(f"Stable at {target_temp}°C")
-                break
+                current_stage += 1  # Move to the next target stage
+                stable_readings_count = 0  # Reset stability for the next stage
+                break  # Exit the inner loop to move to the next target temperature
 
             # Adjust the heater only after a delay and if stable
             if time.time() - last_heater_adjust_time >= observation_period:
@@ -87,10 +89,8 @@ def control_temperature_cycle():
             time.sleep(1)
             previous_temperature = current_temp
 
-        # Move to the next target temperature
-        current_stage += 1
-        stable_readings_count = 0  # Reset stability for the next stage
-        print(f"Moving to the next target temperature: {target_temperatures[current_stage-1]}°C")
+        print(f"Moving to the next target temperature: {target_temp}°C")
+
 
 # Send initial commands to Skywalker roaster
 def send_initial_commands():
