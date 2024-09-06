@@ -10,9 +10,10 @@ scaler = joblib.load('scaler.pkl')
 
 
 # Example function to predict heater value
-def predict_heater_value(fan_value, current_temp, env_temp):
-    # Prepare input data (consistent with 3 features)
-    input_data = pd.DataFrame([[fan_value, current_temp, env_temp]], columns=['fan_value', 'temperature', 'env_temp'])
+def predict_heater_value(fan_value, current_temp, env_temp, target_temp):
+    # Prepare input data, now including 'target_temp' in the input
+    input_data = pd.DataFrame([[fan_value, current_temp, env_temp, target_temp]],
+                              columns=['fan_value', 'temperature', 'env_temp', 'target_temp'])
 
     # Scale input data using the loaded scaler
     input_data_scaled = scaler.transform(input_data)
@@ -27,7 +28,8 @@ def predict_heater_value(fan_value, current_temp, env_temp):
 fan_value = 50  # Example fan value
 current_temp = 40  # Example bean temperature
 env_temp = 45  # Example environment temperature
+target_temp = 65  # Example target temperature
 
 # Make a prediction
-predicted_heater_value = predict_heater_value(fan_value, current_temp, env_temp)
+predicted_heater_value = predict_heater_value(fan_value, current_temp, env_temp, target_temp)
 print(f"Predicted Heater Value: {predicted_heater_value}")
