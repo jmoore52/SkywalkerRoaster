@@ -5,51 +5,49 @@ from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-import joblib
 
-# Load the roaster data
+# Load the dataset (assuming the CSV has these columns in the correct order)
 data = pd.read_csv('roaster_data.csv', names=['time', 'heater_value', 'fan_value', 'bean_temp', 'env_temp'])
 
-# Create the 'future_bean_temp' by shifting 'bean_temp' by one row
+# Create the future bean temperature by shifting the 'bean_temp' column by one row
 data['future_bean_temp'] = data['bean_temp'].shift(-1)
 
-# Drop the last row because it won't have a future bean temperature
-data = data[:-1]
+# Drop the last row (as it won't have a future temp value)
+data = data.dropna()
 
 # Define features (X) and target (y)
-X = data[['heater_value', 'fan_value', 'bean_temp', 'env_temp']]  # Input is current conditions
-y = data['future_bean_temp']  # Target is the bean temperature at the next time step
+X = data[['heater_value', 'fan_value', 'bean_temp', 'env_temp']]
+y = data['future_bean_temp']
 
-# Split into training and test data
+# Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Scale the data (important for neural networks)
+# Standardize the data
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Save the scaler for future use
-joblib.dump(scaler, 'scaler.pkl')
-
-# Define the neural network model
+# Build the neural network model
 model = Sequential([
-    Dense(64, input_dim=X_train.shape[1], activation='relu'),  # Hidden layer
+    Dense(64, input_dim=X_train.shape[1], activation='relu'),  # First hidden layer
     Dense(32, activation='relu'),  # Second hidden layer
-    Dense(1, activation='linear')  # Output layer (predict future bean temperature)
+    Dense(1, activation='linear')  # Output layer (predict future bean temp)
 ])
 
 # Compile the model
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
-# Train the model
-history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=32)
+# Train the model with more epochs for deeper training
+history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=32)
 
-# Evaluate the model
+# Evaluate the model on the test set
 loss, mae = model.evaluate(X_test, y_test)
 print(f"Test Mean Absolute Error: {mae}")
 
-# Save the trained model
-model.save('roaster_pid_model.keras')
+# Save the trained model as a .tflite file for deployment on microcontrollers
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+tflite_model = converter.convert()
 
-# Save the model in HDF5 format as well (legacy format)
-model.save('roaster_pid_model.h5')
+# Save the model to a file
+with open('roaster_pid_model.tflite', 'wb') as f:
+    f.write(tflite_model)
