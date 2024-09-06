@@ -1,14 +1,10 @@
-import sys
 import numpy as np
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
+import joblib
 import tensorflow as tf
 
-# Load the trained model
+# Load the trained model and scaler
 model = tf.keras.models.load_model('roaster_pid_model.keras')
-
-# Load the scaler (you need to ensure this is saved from the training process)
-scaler = StandardScaler()
+scaler = joblib.load('scaler.pkl')
 
 
 # Function to predict the heater value
