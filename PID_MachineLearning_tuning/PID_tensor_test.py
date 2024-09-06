@@ -23,10 +23,10 @@ def predict_heater_value(bean_temp, fan_value, future_bean_temp, env_temp):
 # Example usage with sample input
 if __name__ == "__main__":
     # Define the current state and target for prediction
-    current_bean_temp = 35.0  # Example current bean temperature
+    current_bean_temp = 27.22  # Example current bean temperature
     fan_value = 50  # Example fan speed (0-100%)
-    target_bean_temp = 50.0  # Desired future bean temperature (target temp)
-    current_env_temp = 30.0  # Example current environmental temperature
+    target_bean_temp = 27.43  # Desired future bean temperature (target temp)
+    current_env_temp = 26.72  # Example current environmental temperature
 
     # Make the prediction
     predicted_heater_value = predict_heater_value(current_bean_temp, fan_value, target_bean_temp, current_env_temp)
