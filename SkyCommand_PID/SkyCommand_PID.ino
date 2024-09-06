@@ -2,6 +2,9 @@
 //#define __WARN__
 //#define USE_TIMER_1 true
 
+// #define __DEBUG2__
+
+
 #include <limits.h>
 
 const int txPin = 3;
@@ -29,6 +32,11 @@ unsigned long lastEventTime = 0;
 unsigned long lastEventTimeout = 10000000;
 char CorF = 'F';
 
+// Serial Debug via CH340
+
+#include <SoftwareSerial.h>
+
+SoftwareSerial debugSerial(6, 7); // RX, TX on pins 10 and 11
 
 // MAX31865
 #include <Adafruit_MAX31865.h>
@@ -87,6 +95,7 @@ void setValue(uint8_t* bytePtr, uint8_t v) {
 }
 
 void shutdown() {  //Turn everything off!
+  PIDFirmwareStarted = false;
   for (int i = 0; i < controllerLength; i++) {
     sendBuffer[i] = 0;
   }
@@ -355,6 +364,10 @@ void setup() {
   //While the timer which runs every 10ms will send the control message to the roaster.
   Serial.begin(115200);
   Serial.setTimeout(100);
+
+  // serial debug CH340
+  // debugSerial.begin(9600);   // Second serial for CH340G debugging
+
   pinMode(txPin, OUTPUT);
   shutdown();
 
@@ -393,6 +406,11 @@ void loop() {
   if (Serial.available() > 0) {
     String input = Serial.readString();
 
+    #ifdef __DEBUG2__
+      debugSerial.print("Artisan received : ");
+      debugSerial.print(input);
+    #endif
+
     uint8_t value = 0;
     input.trim();
     int split = input.indexOf(';');
@@ -406,6 +424,7 @@ void loop() {
     }
     
     if (!tuning) {
+
       if (command == "READ") {
         handleREAD();   
       } 

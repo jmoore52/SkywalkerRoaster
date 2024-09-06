@@ -1,0 +1,11 @@
+Artisan received : READ
+Artisan received : DRUM;0
+CHAN;1200
+Artisan received : READ
+Artisan received : CHAN;1200
+Artisan received : UNITS;C
+Artisan received : FILT;70,70,70,70
+Artisan received : READ
+Artisan received : READ
+Artisan received : READ
+.....

@@ -1,0 +1,25 @@
+Artisan received : DRUM;0
+Artisan received : CHAN;1200
+Artisan received : UNITS;C
+Artisan received : FILT;70,70,70,70
+Artisan received : READ
+Artisan received : PID;SV;59.7
+Artisan received : READ
+Artisan received : READ
+Artisan received : PID;T;3.0;0.03;45.0
+PID;CHAN;2
+PID;CT;1000
+PID;LIMIT;0;100
+PID;OT2;60
+Artisan received : READ
+Artisan received : PID;SV;56.67
+Artisan received : READ
+Artisan received : PID;SV;53.31
+Artisan received : READ
+Artisan received : PID;SV;50.22
+Artisan received : READ
+Artisan received : PID;SV;47.41
+Artisan received : READ
+Artisan received : PID;SV;44.87
+Artisan received : READ
+Artisan received : PID;SV;42.58
