@@ -8,16 +8,20 @@ scaler = joblib.load('scaler.pkl')
 
 
 # Function to predict the heater value
-def predict_heater_value(bean_temp, fan_value, future_bean_temp, env_temp):
+def predict_heater_value(current_bean_temp, fan_value, target_bean_temp, current_env_temp):
     # Prepare input data
-    input_data = np.array([[bean_temp, fan_value, future_bean_temp, env_temp]])
+    input_data = np.array([[current_bean_temp, fan_value, target_bean_temp, current_env_temp]])
 
     # Standardize the input data
     input_data_scaled = scaler.transform(input_data)
 
     # Predict the heater value using the model
-    predicted_heater_value = model.predict(input_data_scaled)
-    return predicted_heater_value[0][0] * 100  # Scale back to 0-100
+    predicted_heater_value = model.predict(input_data_scaled)[0][0]
+
+    # Clip the predicted heater value to the range 0-100
+    predicted_heater_value = np.clip(predicted_heater_value, 0, 100)
+
+    return predicted_heater_value
 
 
 # Example usage with sample input
