@@ -1,60 +1,33 @@
-import sys
-import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
+from sklearn.preprocessing import StandardScaler
 
-# Load the saved model
+# Load the trained model
 model = tf.keras.models.load_model('roaster_pid_model.keras')
 
-# Load the scaler used during training
-scaler = StandardScaler()
+# Load the scaler from training (you need to save the scaler during training)
+scaler = StandardScaler()  # Replace this with loading the actual scaler used in training
 
 
-# Assume the scaler was saved, so we load the fitted scaler
-# In practice, you would have saved the scaler used during training and load it here
+# Example function to predict heater value
+def predict_heater_value(fan_value, current_temp, env_temp):
+    # Prepare input data (consistent with 3 features)
+    input_data = pd.DataFrame([[fan_value, current_temp, env_temp]], columns=['fan_value', 'temperature', 'env_temp'])
 
-# Placeholder for now
-# Manually fitted values, or in practice, load from saved scaler fit on training data
-def load_scaler():
-    # Dummy placeholder values, replace with actual training data values
-    dummy_data = np.array([[50, 60, 70], [50, 60, 70]])  # Example data
-    scaler.fit(dummy_data)
-    return scaler
-
-
-scaler = load_scaler()
-
-
-def predict_heater_value(fan_value, current_temp, env_temp, target_temp):
-    # Prepare input data
-    input_data = np.array([[fan_value, current_temp, env_temp, target_temp]])
-
-    # Scale the input data using the scaler from training
+    # Scale input data
     input_data_scaled = scaler.transform(input_data)
 
-    # Make the prediction
-    predicted_heater = model.predict(input_data_scaled)
+    # Make prediction
+    predicted_heater_value = model.predict(input_data_scaled)
 
-    # Ensure that the predicted value is a reasonable number
-    if np.isnan(predicted_heater):
-        print("Prediction resulted in NaN, please check your input values.")
-        return None
-
-    return predicted_heater[0][0]  # Return the predicted value
+    return predicted_heater_value[0][0]  # Return the predicted heater value
 
 
-if __name__ == "__main__":
-    # Example inputs
-    fan_value = 50
-    current_temp = 45.0  # Current bean temperature
-    env_temp = 30.0  # Environment temperature
-    target_temp = 60.0  # Target temperature to reach
+# Example usage
+fan_value = 50  # Example fan value
+current_temp = 40  # Example bean temperature
+env_temp = 45  # Example environment temperature
 
-    # Predict the heater value
-    predicted_heater_value = predict_heater_value(fan_value, current_temp, env_temp, target_temp)
-
-    if predicted_heater_value is not None:
-        print(f"Predicted Heater Value: {predicted_heater_value}")
-    else:
-        print("Failed to predict the heater value.")
+# Make a prediction
+predicted_heater_value = predict_heater_value(fan_value, current_temp, env_temp)
+print(f"Predicted Heater Value: {predicted_heater_value}")
