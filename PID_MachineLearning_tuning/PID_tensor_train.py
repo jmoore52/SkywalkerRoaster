@@ -1,18 +1,13 @@
-# pip install tensorflow pandas scikit-learn
-#
-import sys
-sys.path.append('/usr/local/lib/python3.11/site-packages')  # Replace with actual path
-
-
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # Load the dataset
 data = pd.read_csv('roaster_data.csv', names=['timestamp', 'heater_value', 'fan_value', 'temperature', 'env_temp'])
-
-# Drop unnecessary columns (e.g., timestamp)
-data = data.drop(columns=['timestamp'])
+data = data.drop(columns=['timestamp'])  # Drop unnecessary columns
 
 # Split the data into features (X) and target (y)
 X = data[['fan_value', 'temperature', 'env_temp']]
@@ -21,50 +16,34 @@ y = data['heater_value']
 # Split into training and testing data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Standardize the data (important for neural networks)
+# Standardize the data
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-
 # Define the neural network architecture
 model = Sequential([
-    Dense(64, input_dim=X_train.shape[1], activation='relu'),  # Hidden layer
-    Dense(32, activation='relu'),  # Second hidden layer
-    Dense(1, activation='linear')  # Output layer (predict heater value)
+    Dense(64, input_dim=X_train.shape[1], activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(1, activation='linear')
 ])
 
-# Compile the model
+# Define custom loss function if needed
+def custom_mse(y_true, y_pred):
+    return tf.reduce_mean(tf.square(y_true - y_pred))
+
+# Compile the model with custom loss or standard loss
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
 # Train the model
 history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=32)
 
-
 # Evaluate the model
 loss, mae = model.evaluate(X_test, y_test)
 print(f"Test Mean Absolute Error: {mae}")
 
-# Predict on new data
-predictions = model.predict(X_test)
-
-# Save the trained model to a file
+# Save the trained model in the .keras format
 model.save('roaster_pid_model.keras')
 
-# Load the trained model
-model = tf.keras.models.load_model('roaster_pid_model.keras')
-
-@tf.keras.saving.register_keras_serializable()
-def mse(y_true, y_pred):
-    return tf.reduce_mean(tf.square(y_true - y_pred))
-
-model = tf.keras.models.load_model(
-    'roaster_pid_model.h5',
-    custom_objects={'mse': tf.keras.losses.MeanSquaredError()}
-)
-
-
+# Load the model with the custom loss function
+model = tf.keras.models.load_model('roaster_pid_model.keras', custom_objects={'custom_mse': custom_mse})
