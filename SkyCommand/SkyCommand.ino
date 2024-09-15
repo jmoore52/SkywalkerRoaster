@@ -251,8 +251,6 @@ void setup() {
   //The idea is that the loop will handle any requests from serial.
   //While the timer which runs every 10ms will send the control message to the roaster.
   Serial.begin(115200);
-  // Serial.println("Hello, World!"); // Test line
-
   Serial.setTimeout(100);
   pinMode(txPin, OUTPUT);
   shutdown();
@@ -287,71 +285,7 @@ void loop() {
     input.trim();
     parseAndExecuteCommands(input);  // Handle multiple commands
   }
-  // if (Serial.available() > 0) {
-  //   String input = Serial.readString();
-
-  //   uint8_t value = 0;
-  //   input.trim();
-  //   int split = input.indexOf(';');
-  //   String command = "";
-
-  //   if (split >= 0) {
-  //     command = input.substring(0, split);
-  //     value = input.substring(split + 1).toInt();
-  //   } else {
-  //     command = input;
-  //   }
-
-  //   if (command == "READ") {
-  //     handleREAD();
-  //   } else if (command == "OT1") {  //Set Heater Duty
-  //     handleHEAT(value);
-  //   } else if (command == "OT2") {  //Set Fan Duty
-  //     handleVENT(value);
-  //   } else if (command == "OFF") {  //Shut it down
-  //     shutdown();
-  //   } else if (command == "DRUM") {  //Start the drum
-  //     handleDRUM(value);
-  //   } else if (command == "FILTER") {  //Turn on the filter fan
-  //     handleFILTER(value);
-  //   } else if (command == "COOL") {  //Cool the beans
-  //     handleCOOL(value);
-  //   } else if (command == "CHAN") {  //Hanlde the TC4 init message
-  //     handleCHAN();
-  //   } else if (command == "UNITS") {
-  //     if (split >= 0) CorF = input.charAt(split + 1);
-  //   }
-  // }
-
 }
-
-// void parseAndExecuteCommands(String input) {
-//   while (input.length() > 0) {
-//     int split = input.indexOf(';');
-//     String command;
-//     uint8_t value = 0;
-
-//     if (split >= 0) {
-//       command = input.substring(0, split);
-//       input = input.substring(split + 1);
-
-//       // Find the next semicolon if any, to determine the value
-//       int nextSplit = input.indexOf(';');
-//       if (nextSplit >= 0) {
-//         value = input.substring(0, nextSplit).toInt();
-//         input = input.substring(nextSplit + 1);
-//       } else {
-//         value = input.toInt();  // Last value or single command
-//         input = "";
-//       }
-//     } else {
-//       command = input;
-//       input = "";
-//     }
-
-//     executeCommand(command, value);
-//   }
-// }
 
 void parseAndExecuteCommands(String input) {
   // Serial.println("Starting command parsing...");
@@ -424,6 +358,3 @@ void executeCommand(String command, uint8_t value) {
     if (value != 0) CorF = value;
   }
 }
-
-
-
