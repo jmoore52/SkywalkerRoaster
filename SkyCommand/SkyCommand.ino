@@ -285,46 +285,113 @@ void handleREAD() {
 
   lastEventTime = micros();
 }
+void executeCommand(String command, int value = 0) {  // Provide a default value of 0 for commands like "READ"
+  if (command == "READ") {
+    handleREAD();  // No value needed for READ
+  } else if (command == "OT1") {  // Set Heater Duty
+    handleHEAT(value);
+  } else if (command == "OT2") {  // Set Fan Duty
+    handleVENT(value);
+  } else if (command == "OFF") {  // Shut it down
+    shutdown();
+  } else if (command == "DRUM") {  // Start the drum
+    handleDRUM(value);
+  } else if (command == "FILTER") {  // Turn on the filter fan
+    handleFILTER(value);
+  } else if (command == "COOL") {  // Cool the beans
+    handleCOOL(value);
+  } else if (command == "CHAN") {  // Handle the TC4 init message
+    handleCHAN();
+  }
+}
+
+void executeUnitsCommand(char unit) {
+  if (unit == 'C' || unit == 'F') {
+    CorF = unit;  // Directly assign the char value (either 'C' or 'F')
+  }
+}
+
+void parseAndExecuteCommands(String input) {
+  while (input.length() > 0) {
+    int split = input.indexOf(';');
+    String command;
+    int value = 0;  // Default value is 0 for commands that don't need a value
+
+    if (split >= 0) {
+      command = input.substring(0, split);
+      input = input.substring(split + 1);
+
+      // Handle special case for the "UNITS" command
+      if (command == "UNITS") {
+        char unit = input.charAt(0);  // Get the first character after the semicolon (either 'C' or 'F')
+        input = input.substring(1);  // Remove the character from input
+        executeUnitsCommand(unit);   // Handle UNITS command separately
+      } else {
+        // Handle the numerical value for other commands
+        int nextSplit = input.indexOf(';');
+        if (nextSplit >= 0) {
+          value = input.substring(0, nextSplit).toInt();  // Convert string to integer
+          input = input.substring(nextSplit + 1);
+        } else {
+          value = input.toInt();  // Last value or single command
+          input = "";
+        }
+        executeCommand(command, value);  // Execute command with numeric value
+      }
+    } else {
+      command = input;
+      input = "";
+      executeCommand(command);  // Call without value for commands like "READ"
+    }
+  }
+}
 
 void getArtisanMessage() {
   if (Serial.available() > 0) {
     String input = Serial.readString();
-
-    uint8_t value = 0;
     input.trim();
-    int split = input.indexOf(';');
-    String command = "";
-
-    if (split >= 0) {
-      command = input.substring(0, split);
-      value = input.substring(split + 1).toInt();
-    } else {
-      command = input;
-    }
-
-    if (command == "READ") {
-      handleREAD();
-    } else if (command == "OT1") {  //Set Heater Duty
-      handleHEAT(value);
-    } else if (command == "OT2") {  //Set Fan Duty
-      handleVENT(value);
-    } else if (command == "OFF") {  //Shut it down
-      shutdown();
-    } else if (command == "ESTOP") {  //Emergency stop heat to 0 and vent to 100
-      eStop();
-    } else if (command == "DRUM") {  //Start the drum
-      handleDRUM(value);
-    } else if (command == "FILTER") {  //Turn on the filter fan
-      handleFILTER(value);
-    } else if (command == "COOL") {  //Cool the beans
-      handleCOOL(value);
-    } else if (command == "CHAN") {  //Hanlde the TC4 init message
-      handleCHAN();
-    } else if (command == "UNITS") {
-      if (split >= 0) CorF = input.charAt(split + 1);
-    }
+    parseAndExecuteCommands(input);  // Handle multiple commands
   }
 }
+// void getArtisanMessage() {
+//   if (Serial.available() > 0) {
+//     String input = Serial.readString();
+
+//     uint8_t value = 0;
+//     input.trim();
+//     int split = input.indexOf(';');
+//     String command = "";
+
+//     if (split >= 0) {
+//       command = input.substring(0, split);
+//       value = input.substring(split + 1).toInt();
+//     } else {
+//       command = input;
+//     }
+
+//     if (command == "READ") {
+//       handleREAD();
+//     } else if (command == "OT1") {  //Set Heater Duty
+//       handleHEAT(value);
+//     } else if (command == "OT2") {  //Set Fan Duty
+//       handleVENT(value);
+//     } else if (command == "OFF") {  //Shut it down
+//       shutdown();
+//     } else if (command == "ESTOP") {  //Emergency stop heat to 0 and vent to 100
+//       eStop();
+//     } else if (command == "DRUM") {  //Start the drum
+//       handleDRUM(value);
+//     } else if (command == "FILTER") {  //Turn on the filter fan
+//       handleFILTER(value);
+//     } else if (command == "COOL") {  //Cool the beans
+//       handleCOOL(value);
+//     } else if (command == "CHAN") {  //Hanlde the TC4 init message
+//       handleCHAN();
+//     } else if (command == "UNITS") {
+//       if (split >= 0) CorF = input.charAt(split + 1);
+//     }
+//   }
+// }
 
 //Failsafe functions
 //Don't want the roaster be uncontrolled.. By itself, if you don't send a command in 1sec it will shutdown
