@@ -286,43 +286,83 @@ void handleREAD() {
   lastEventTime = micros();
 }
 
-void getArtisanMessage() {
-  if (Serial.available() > 0) {
-    String input = Serial.readString();
+void executeCommand(String command, uint8_t value) {
+  if (command == "READ") {
+    handleREAD();
+  } else if (command == "OT1") {  // Set Heater Duty
+    handleHEAT(value);
+  } else if (command == "OT2") {  // Set Fan Duty
+    handleVENT(value);
+  } else if (command == "OFF") {  // Shut it down
+    shutdown();
+  } else if (command == "DRUM") {  // Start the drum
+    handleDRUM(value);
+  } else if (command == "FILTER") {  // Turn on the filter fan
+    handleFILTER(value);
+  } else if (command == "COOL") {  // Cool the beans
+    handleCOOL(value);
+  } else if (command == "CHAN") {  // Handle the TC4 init message
+    handleCHAN();
+  } else if (command == "UNITS") {
+    if (value != 0) CorF = value;
+  }
+}
+  
+  void parseAndExecuteCommands(String input) {
+  // Serial.println("Starting command parsing...");
 
-    uint8_t value = 0;
-    input.trim();
+  while (input.length() > 0) {
+    // Serial.print("Remaining input: ");
+    // Serial.println(input);
+
     int split = input.indexOf(';');
-    String command = "";
+    String command;
+    uint8_t value = 0;
 
     if (split >= 0) {
       command = input.substring(0, split);
-      value = input.substring(split + 1).toInt();
+      input = input.substring(split + 1);
+
+      // Serial.print("Parsed command: ");
+      // Serial.println(command);
+
+      // Find the next semicolon if any, to determine the value
+      int nextSplit = input.indexOf(';');
+      if (nextSplit >= 0) {
+        value = input.substring(0, nextSplit).toInt();
+        input = input.substring(nextSplit + 1);
+      } else {
+        value = input.toInt();  // Last value or single command
+        input = "";
+      }
+
+      // Serial.print("Parsed value: ");
+      // Serial.println(value);
     } else {
       command = input;
+      input = "";
+
+      // Serial.print("Final command: ");
+      // Serial.println(command);
     }
 
-    if (command == "READ") {
-      handleREAD();
-    } else if (command == "OT1") {  //Set Heater Duty
-      handleHEAT(value);
-    } else if (command == "OT2") {  //Set Fan Duty
-      handleVENT(value);
-    } else if (command == "OFF") {  //Shut it down
-      shutdown();
-    } else if (command == "ESTOP") {  //Emergency stop heat to 0 and vent to 100
-      eStop();
-    } else if (command == "DRUM") {  //Start the drum
-      handleDRUM(value);
-    } else if (command == "FILTER") {  //Turn on the filter fan
-      handleFILTER(value);
-    } else if (command == "COOL") {  //Cool the beans
-      handleCOOL(value);
-    } else if (command == "CHAN") {  //Hanlde the TC4 init message
-      handleCHAN();
-    } else if (command == "UNITS") {
-      if (split >= 0) CorF = input.charAt(split + 1);
-    }
+    // Serial.print("Executing command: ");
+    // Serial.print(command);
+    // Serial.print(" with value: ");
+    // Serial.println(value);
+
+    executeCommand(command, value);
+  }
+
+  // Serial.println("Finished command parsing.");
+}
+  
+void getArtisanMessage() {
+    if (Serial.available() > 0) {
+
+    String input = Serial.readString();
+    input.trim();
+    parseAndExecuteCommands(input);  // Handle multiple commands
   }
 }
 
@@ -382,6 +422,7 @@ void setup() {
 }
 
 void loop() {
+  // Serial.println("Looping...");  // Test line
   //Don't want the roaster be uncontrolled.. By itself, if you don't send a command in 1sec it will shutdown
   //But I also want to ensure the arduino is getting commands from something.
   //I think a safeguard for this might be to ensure we're regularly receiving control messages.
