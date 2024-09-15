@@ -35,7 +35,7 @@ double temp = 0.0;
 char CorF = 'F';
 
 //Failsafe variables
-const int maxTemp = 300;
+const int maxTemp = 300; //in Celcius
 unsigned long lastEventTime = 0;
 unsigned long lastEventTimeout = 10000000;
 bool failedToReadRoaster = false;
@@ -345,9 +345,15 @@ bool itsbeentoolong() {  //Checks if too much time has passed since the last con
   return false;
 }
 
-bool isTemperatureOverLimit() {  //Checks if the current temperature exceeds the maximum allowed temperature
-  if (temp > maxTemp) {
-    return true;
+bool isTemperatureOverLimit() {  
+  if (CorF == 'C') {
+    if (temp > maxTemp) {
+      return true;
+    }
+  } else if (CorF == 'F') {
+    if ((temp - 32) * 5 / 9 > maxTemp) {  
+      return true;
+    }
   }
   return false;
 }
