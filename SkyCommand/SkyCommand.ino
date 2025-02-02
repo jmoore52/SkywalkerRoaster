@@ -92,32 +92,31 @@ void sendRoasterMessage() {
 }
 
 double calculateTemp() {
-  /* 
-    I really hate this. 
-    It seems to work.. but I feel like there must be a better way than 
-    using a 4th degree polynomial to model this but I sure can't seem to figure it out. 
-  */
-
-  double x = ((receiveBuffer[0] << 8) + receiveBuffer[1]) / 1000.0;
-  double y = ((receiveBuffer[2] << 8) + receiveBuffer[3]) / 1000.0;
+    // Extract and convert sensor values
+    double x = ((receiveBuffer[0] << 8) | receiveBuffer[1]) * 0.001;
+    double y = ((receiveBuffer[2] << 8) | receiveBuffer[3]) * 0.001;
 
 #ifdef __DEBUG__
   Serial.print(x);
   Serial.print(',');
   Serial.println(y);
 #endif
+    // Precompute reused values
+    double x2 = x * x, y2 = y * y;
+    double x3 = x2 * x, y3 = y2 * y;
+    double x4 = x3 * x, y4 = y3 * y;
+    double xy = x * y, x2y = x2 * y, xy2 = x * y2, x3y = x3 * y, x2y2 = x2 * y2, xy3 = x * y3;
 
-  double v = 583.1509258523457 + -714.0345395202813 * x + -196.071718077524 * y
-             + 413.37964344228334 * x * x + 2238.149675349052 * x * y
-             + -4099.91031297056 * y * y + 357.49007607425233 * x * x * x
-             + -5001.419602972793 * x * x * y + 8242.08618555862 * x * y * y
-             + 247.6124684730026 * y * y * y + -555.8643213534281 * x * x * x * x
-             + 3879.431274654493 * x * x * x * y + -6885.682277959339 * x * x * y * y
-             + 2868.4191998911865 * x * y * y * y + -1349.1588373011923 * y * y * y * y;
+    // Polynomial evaluation
+    double v = 583.1509258523457 +
+               (-714.0345395202813 * x) + (-196.071718077524 * y) +
+               (413.37964344228334 * x2) + (2238.149675349052 * xy) + (-4099.91031297056 * y2) +
+               (357.49007607425233 * x3) + (-5001.419602972793 * x2y) + (8242.08618555862 * xy2) + (247.6124684730026 * y3) +
+               (-555.8643213534281 * x4) + (3879.431274654493 * x3y) + (-6885.682277959339 * x2y2) + (2868.4191998911865 * xy3) +
+               (-1349.1588373011923 * y4);
 
-  if (CorF == 'C') v = (v - 32) * 5 / 9;
-
-  return v;
+    // Convert to Celsius if needed
+    return (CorF == 'C') ? ((v - 32) * 5.0 / 9.0) : v;
 }
 
 void receiveSerialBitsFromRoaster(int bytes, int pin) {  //Receives serial bits from the roaster and stores them in the receive buffer.
